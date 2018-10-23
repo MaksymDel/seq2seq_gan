@@ -12,6 +12,7 @@ def build_modules(vocab, opt) -> Dict[str, Any]:
     modules_dict = {}
     modules_dict = _build_embeddings(vocab, modules_dict, opt)
     modules_dict = _build_models(vocab, modules_dict, opt)
+    return modules_dict
 
 
 def _build_embeddings(vocab: Vocabulary, modules_dict: Dict[str, Any], opt) -> Dict[str, Any]:
