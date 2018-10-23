@@ -255,8 +255,8 @@ class Rnn2Rnn(Model):
         Initialize the encoded state to be passed to the first decoding time step.
         """
         # shape: (batch_size, max_input_sequence_length, embedding_dim)
-        print(type(source_tokens["onehots"]))
-        print(type(source_tokens["onehots"].float()))
+        print(source_tokens["onehots"].is_cuda)
+        print(source_tokens["onehots"].float().is_cuda)
 
         embedded_input = torch.matmul(source_tokens["onehots"].float(), self._source_embedding.weight)
 
