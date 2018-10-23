@@ -21,10 +21,13 @@ def mean_of_list(l):
     return round(sum(l) / float(len(l)), 4)
 
 
-def to_cuda(obj):
+def to_cuda(obj, modules=False):
     """
     Move to GPU
     """
+
+    if modules:
+        return {key: value.cuda() for key, value in obj.items()}
 
     if isinstance(obj, torch.Tensor):
         return obj.cuda()
@@ -34,5 +37,3 @@ def to_cuda(obj):
         return [to_cuda(item) for item in obj]
     elif isinstance(obj, tuple):
         return tuple([to_cuda(item) for item in obj])
-    else:
-        return obj.cuda()
