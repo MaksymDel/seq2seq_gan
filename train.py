@@ -66,7 +66,7 @@ modules_dict = build_modules(vocab, opt)
 
 # move to GPU
 if opt.cuda:
-    to_cuda(modules_dict, modules=True)
+    modules_dict = to_cuda(modules_dict, modules=True)
 
 # create optimizers
 optimizer_generators = torch.optim.Adam(itertools.chain(modules_dict["generator_a2b"].parameters(),
@@ -96,6 +96,12 @@ generator_validation = iterator(validation_dataset, shuffle=False)
 golden_target_real = torch.Tensor(opt.batch_size).fill_(1.0)
 golden_target_fake = torch.Tensor(opt.batch_size).fill_(0.0)
 
+# move to GPU
+if opt.cuda:
+    golden_target_fake = to_cuda(golden_target_fake)
+    golden_target_real = to_cuda(golden_target_real)
+
+
 # fixed data to check the progress on
 iterator_dummy = BasicIterator(batch_size=1)
 iterator_dummy.index_with(vocab)
@@ -106,8 +112,8 @@ fixed_batch_B = prepare_model_input(source_tokens_dict=fixed_batch['target_token
 
 # move to GPU
 if opt.cuda:
-    to_cuda(fixed_batch_A)
-    to_cuda(fixed_batch_B)
+    fixed_batch_A = to_cuda(fixed_batch_A)
+    fixed_batch_B = to_cuda(fixed_batch_B)
 
 # beam search for inference
 beam_search_A = BeamSearch(end_index=vocab.get_token_index(namespace="language_A", token='@end@'),
@@ -136,21 +142,8 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
 
         # move to GPU
         if opt.cuda:
-            #to_cuda(real_batch_A)
-            #to_cuda(real_batch_B)
-
-            real_batch_A['source_tokens']['onehots'] = real_batch_A['source_tokens']['onehots'].float().cuda()
-            real_batch_A['source_tokens']['ids'] = real_batch_A['source_tokens']['ids'].long().cuda()
-
-            real_batch_B['source_tokens']['onehots'] = real_batch_B['source_tokens']['onehots'].float().cuda()
-            real_batch_B['source_tokens']['ids'] = real_batch_B['source_tokens']['ids'].long().cuda()
-
-            print(real_batch_A['source_tokens']['onehots'])
-
-            print(real_batch_A['source_tokens']['onehots'].float().cuda().is_cuda)
-
-            real_batch_B['source_tokens']['onehots'].cuda()
-            real_batch_B['source_tokens']['ids'].cuda()
+            real_batch_A = to_cuda(real_batch_A)
+            real_batch_B = to_cuda(real_batch_B)
 
         ###### Generators ######
         optimizer_generators.zero_grad()
