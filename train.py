@@ -65,7 +65,7 @@ vocab = Vocabulary.from_instances(train_dataset)
 modules_dict = build_modules(vocab, opt)
 
 # move to GPU
-if opt.cuda():
+if opt.cuda:
     to_cuda(modules_dict)
 
 # create optimizers
@@ -104,6 +104,11 @@ fixed_batch = sample_new_batch(generator_dummy, vocab)
 fixed_batch_A = prepare_model_input(source_tokens_dict=fixed_batch['source_tokens'])
 fixed_batch_B = prepare_model_input(source_tokens_dict=fixed_batch['target_tokens'])
 
+# move to GPU
+if opt.cuda:
+    to_cuda(fixed_batch_A)
+    to_cuda(fixed_batch_B)
+
 # beam search for inference
 beam_search_A = BeamSearch(end_index=vocab.get_token_index(namespace="language_A", token='@end@'),
                            max_steps=opt.max_decoding_steps)
@@ -130,7 +135,7 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
         real_batch_B = prepare_model_input(source_tokens_dict=curr_batch['target_tokens'])
 
         # move to GPU
-        if opt.cuda():
+        if opt.cuda:
             to_cuda(real_batch_A)
             to_cuda(real_batch_B)
 
