@@ -139,12 +139,15 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
             #to_cuda(real_batch_A)
             #to_cuda(real_batch_B)
 
-            real_batch_A['source_tokens']['onehots'].float().cuda()
-            real_batch_A['source_tokens']['ids'].float().cuda()
+            real_batch_A['source_tokens']['onehots'] = real_batch_A['source_tokens']['onehots'].float().cuda()
+            real_batch_A['source_tokens']['ids'] = real_batch_A['source_tokens']['ids'].long().cuda()
+
+            real_batch_B['source_tokens']['onehots'] = real_batch_B['source_tokens']['onehots'].float().cuda()
+            real_batch_B['source_tokens']['ids'] = real_batch_B['source_tokens']['ids'].long().cuda()
 
             print(real_batch_A['source_tokens']['onehots'])
 
-            print(real_batch_A['source_tokens']['onehots'].is_cuda)
+            print(real_batch_A['source_tokens']['onehots'].float().cuda().is_cuda)
 
             real_batch_B['source_tokens']['onehots'].cuda()
             real_batch_B['source_tokens']['ids'].cuda()
