@@ -89,7 +89,7 @@ lr_scheduler_discriminators = torch.optim.lr_scheduler.LambdaLR(optimizer_discri
 # create batch generators
 iterator = BasicIterator(batch_size=opt.batch_size)
 iterator.index_with(vocab)
-generator_train = iterator(train_dataset, shuffle=False, num_epochs=opt.n_epochs)
+generator_train = iterator(train_dataset, shuffle=False)
 generator_validation = iterator(validation_dataset, shuffle=False)
 
 # create golden tensors for discriminators
