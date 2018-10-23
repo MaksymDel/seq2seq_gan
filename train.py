@@ -136,8 +136,14 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
 
         # move to GPU
         if opt.cuda:
-            to_cuda(real_batch_A)
-            to_cuda(real_batch_B)
+            #to_cuda(real_batch_A)
+            #to_cuda(real_batch_B)
+
+            real_batch_A['source_tokens']['onehots'].cuda()
+            real_batch_A['source_tokens']['ids'].cuda()
+
+            real_batch_B['source_tokens']['onehots'].cuda()
+            real_batch_B['source_tokens']['ids'].cuda()
 
         ###### Generators ######
         optimizer_generators.zero_grad()
