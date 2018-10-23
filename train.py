@@ -247,6 +247,14 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
             avg_gan_losses.append(((loss_gan_a2b + loss_gan_b2a) / 2.).item())
             discriminators_losses.append(loss_discriminators.item())
 
+            print("epoch #:", epoch_num,
+                  "|| batch: {}/{}".format(batch_num, num_batches),
+                  "|| discriminators_loss:", mean_of_list(discriminators_losses),
+                  "|| avg_cycle_loss:", mean_of_list(avg_cycle_losses),
+                  "|| avg_gan_loss:", mean_of_list(avg_gan_losses)
+                  )
+
+
             modules_dict['generator_a2b']._beam_search = beam_search_B
             modules_dict['generator_b2a']._beam_search = beam_search_A
 
@@ -263,12 +271,7 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
             modules_dict['generator_a2b']._beam_search = None
             modules_dict['generator_b2a']._beam_search = None
 
-            print("epoch #:", epoch_num,
-                  "|| batch {}/{}:".format(batch_num, num_batches),
-                  "|| discriminators_loss:", mean_of_list(discriminators_losses),
-                  "|| avg_cycle_loss:", mean_of_list(avg_cycle_losses),
-                  "|| avg_gan_loss:", mean_of_list(avg_gan_losses)
-                  )
+            print("-----------------------------------------------------------------")
 
     # Update learning rates
     lr_scheduler_generators.step()
