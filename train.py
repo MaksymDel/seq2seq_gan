@@ -145,6 +145,15 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
             real_batch_A = to_cuda(real_batch_A)
             real_batch_B = to_cuda(real_batch_B)
 
+        # create golden tensors for discriminators
+        golden_target_real = torch.Tensor(real_batch_B.size()[0]).fill_(1.0)
+        golden_target_fake = torch.Tensor(real_batch_B.size()[0]).fill_(0.0)
+
+        # move to GPU
+        if opt.cuda:
+            golden_target_fake = to_cuda(golden_target_fake)
+            golden_target_real = to_cuda(golden_target_real)
+
         ###### Generators ######
         optimizer_generators.zero_grad()
 
