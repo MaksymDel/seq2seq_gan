@@ -66,7 +66,7 @@ modules_dict = build_modules(vocab, opt)
 
 # move to GPU
 if opt.cuda:
-    to_cuda(modules_dict)
+    to_cuda(modules_dict, modules=True)
 
 # create optimizers
 optimizer_generators = torch.optim.Adam(itertools.chain(modules_dict["generator_a2b"].parameters(),
