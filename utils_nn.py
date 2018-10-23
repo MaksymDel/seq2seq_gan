@@ -25,6 +25,7 @@ def to_cuda(obj):
     """
     Move to GPU
     """
+
     if isinstance(obj, torch.Tensor):
         return obj.cuda()
     elif isinstance(obj, dict):
@@ -34,4 +35,4 @@ def to_cuda(obj):
     elif isinstance(obj, tuple):
         return tuple([to_cuda(item) for item in obj])
     else:
-        return obj
+        return obj.cuda()
