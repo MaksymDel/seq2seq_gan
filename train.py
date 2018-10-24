@@ -271,7 +271,7 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
             modules_dict['generator_a2b']._beam_search = None
             modules_dict['generator_b2a']._beam_search = None
 
-            print("-----------------------------------------------------------------")
+            print("--------------------------------------------------------")
 
     # Update learning rates
     lr_scheduler_generators.step()
