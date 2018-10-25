@@ -8,7 +8,7 @@ from allennlp.modules.seq2seq_encoders.seq2seq_encoder import Seq2SeqEncoder
 
 class PytorchSeq2SeqWrapper(Seq2SeqEncoder):
     """
-    Pytorch's RNNs have two output: the hidden state for every time step, and the hidden state at
+    Pytorch's RNNs have two outputs: the hidden state for every time step, and the hidden state at
     the last time step for every layer.  We just want the first one as a single output.  This
     wrapper pulls out that output, and adds a :func:`get_output_dim` method, which is useful if you
     want to, e.g., define a linear + softmax layer on top of this to get some distribution over a

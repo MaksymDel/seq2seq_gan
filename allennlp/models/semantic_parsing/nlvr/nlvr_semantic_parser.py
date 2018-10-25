@@ -40,7 +40,7 @@ class NlvrSemanticParser(Model):
     encoder : ``Seq2SeqEncoder``
         The encoder to use for the input question.
     dropout : ``float``, optional (default=0.0)
-        Dropout on the encoder output.
+        Dropout on the encoder outputs.
     rule_namespace : ``str``, optional (default=rule_labels)
         The vocabulary namespace to use for production rules.  The default corresponds to the
         default used in the dataset reader, so you likely don't need to modify this.

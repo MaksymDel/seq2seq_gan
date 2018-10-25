@@ -27,7 +27,7 @@ class TestPredict(AllenNlpTestCase):
         self.bidaf_data_path = self.FIXTURES_ROOT / 'data' / 'squad.json'
         self.tempdir = pathlib.Path(tempfile.mkdtemp())
         self.infile = self.tempdir / "inputs.txt"
-        self.outfile = self.tempdir / "output.txt"
+        self.outfile = self.tempdir / "outputs.txt"
 
     def test_add_predict_subparser(self):
         parser = argparse.ArgumentParser(description="Testing")
@@ -207,7 +207,7 @@ class TestPredict(AllenNlpTestCase):
             f.write(code)
 
         self.infile = os.path.join(self.TEST_DIR, "inputs.txt")
-        self.outfile = os.path.join(self.TEST_DIR, "output.txt")
+        self.outfile = os.path.join(self.TEST_DIR, "outputs.txt")
 
         with open(self.infile, 'w') as f:
             f.write("""{"passage": "the seahawks won the super bowl in 2016", """
@@ -249,7 +249,7 @@ class TestPredict(AllenNlpTestCase):
     def test_alternative_file_formats(self):
         @Predictor.register('bidaf-csv')  # pylint: disable=unused-variable
         class BidafCsvPredictor(BidafPredictor):
-            """same as bidaf predictor but using CSV inputs and output"""
+            """same as bidaf predictor but using CSV inputs and outputs"""
             def load_line(self, line: str) -> JsonDict:
                 reader = csv.reader([line])
                 passage, question = next(reader)

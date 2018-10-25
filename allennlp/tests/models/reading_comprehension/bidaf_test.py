@@ -57,7 +57,7 @@ class BidirectionalAttentionFlowTest(ModelTestCase):
         # output of the encoder.  Because BiDAF is so deep, these differences get magnified through
         # the network and make this test impossible.  So, we'll remove the CNN encoder entirely
         # from the model for this test.  If/when we fix the CNN encoder to work correctly with
-        # masking, we can change this back to how the other models run this test, with just a
+        # masking, we can change this back to how the other generators_discriminators run this test, with just a
         # single line.
         # pylint: disable=protected-access,attribute-defined-outside-init
 

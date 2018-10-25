@@ -92,7 +92,7 @@ class BeamSearch:
 
         # Calculate the first timestep. This is done outside the main loop
         # because we are going from a single decoder input (the output from the
-        # encoder) to the top `beam_size` decoder output. On the other hand,
+        # encoder) to the top `beam_size` decoder outputs. On the other hand,
         # within the main loop we are going from the `beam_size` elements of the
         # beam to `beam_size`^2 candidates from which we will select the top
         # `beam_size` elements for the next iteration.

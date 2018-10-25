@@ -1,4 +1,3 @@
-1 2 3 4 5 6 7 8 9 1 a b c d e f g h i a
 6 7 3 2 1 5 9 2 7 7	g f c f c i h c i a
 7 2 6 8 9 3 2 5 7 9	b g i g i g g a g b
 9 9 7 6 2 3 9 2 3 3	b e i e b e f c g b

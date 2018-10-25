@@ -8,7 +8,7 @@ class LayerNorm(torch.nn.Module):
     <https://www.semanticscholar.org/paper/Layer-Normalization-Ba-Kiros/97fb4e3d45bb098e27e0071448b6152217bd35a5>`_ .
 
     Layer Normalization stabilises the training of deep neural networks by
-    normalising the output of neurons from a particular layer. It computes:
+    normalising the outputs of neurons from a particular layer. It computes:
 
     output = (gamma * (tensor - mean) / (std + eps)) + beta
 

@@ -6,13 +6,14 @@ import torch
 import torch.nn.functional as F
 from torch.nn.functional import nll_loss
 
-from allennlp.tools import squad_eval
+from allennlp.common.checks import check_dimensions_match
 from allennlp.data import Vocabulary
 from allennlp.models.model import Model
 from allennlp.modules import Seq2SeqEncoder, TimeDistributed, TextFieldEmbedder
-from allennlp.modules.matrix_attention.linear_matrix_attention import LinearMatrixAttention
 from allennlp.modules.input_variational_dropout import InputVariationalDropout
+from allennlp.modules.matrix_attention.linear_matrix_attention import LinearMatrixAttention
 from allennlp.nn import InitializerApplicator, util
+from allennlp.tools import squad_eval
 from allennlp.training.metrics import Average, BooleanAccuracy, CategoricalAccuracy
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -93,6 +94,12 @@ class DialogQA(Model):
         self._span_yesno_predictor = TimeDistributed(torch.nn.Linear(self._encoding_dim, 3))
         self._span_followup_predictor = TimeDistributed(self._followup_lin)
 
+        check_dimensions_match(phrase_layer.get_input_dim(),
+                               text_field_embedder.get_output_dim() +
+                               marker_embedding_dim * num_context_answers,
+                               "phrase layer input dim",
+                               "embedding dim + marker dim * num context answers")
+
         initializer(self)
 
         self._span_start_accuracy = CategoricalAccuracy()
@@ -149,10 +156,10 @@ class DialogQA(Model):
             This is one of the inputs, but only when num_context_answers > 2.
             It is similar to p1_answer_marker, but marking previous previous previous answer in passage.
         yesno_list :  ``torch.IntTensor``, optional
-            This is one of the output that we are trying to predict.
+            This is one of the outputs that we are trying to predict.
             Three way classification (the yes/no/not a yes no question).
         followup_list :  ``torch.IntTensor``, optional
-            This is one of the output that we are trying to predict.
+            This is one of the outputs that we are trying to predict.
             Three way classification (followup / maybe followup / don't followup).
         metadata : ``List[Dict[str, Any]]``, optional
             If present, this should contain the question ID, original passage text, and token

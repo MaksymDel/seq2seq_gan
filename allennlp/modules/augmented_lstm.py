@@ -26,7 +26,7 @@ class AugmentedLstm(torch.nn.Module):
     input_size : int, required.
         The dimension of the inputs to the LSTM.
     hidden_size : int, required.
-        The dimension of the output of the LSTM.
+        The dimension of the outputs of the LSTM.
     go_forward: bool, optional (default = True)
         The direction in which the LSTM is applied to the sequence.
         Forwards by default, or backwards if False.
@@ -50,9 +50,9 @@ class AugmentedLstm(torch.nn.Module):
     Returns
     -------
     output_accumulator : PackedSequence
-        The output of the LSTM for each timestep. A tensor of shape
+        The outputs of the LSTM for each timestep. A tensor of shape
         (batch_size, max_timesteps, hidden_size) where for a given batch
-        element, all output past the sequence length for that batch are
+        element, all outputs past the sequence length for that batch are
         zero tensors.
     """
     def __init__(self,
@@ -110,7 +110,7 @@ class AugmentedLstm(torch.nn.Module):
         -------
         A PackedSequence containing a torch.FloatTensor of shape
         (batch_size, num_timesteps, output_dimension) representing
-        the output of the LSTM per timestep and a tuple containing
+        the outputs of the LSTM per timestep and a tuple containing
         the LSTM state, with shape (1, batch_size, hidden_size) to
         match the Pytorch API.
         """

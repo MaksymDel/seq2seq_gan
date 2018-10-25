@@ -122,7 +122,7 @@ def pad_sequence_to_length(sequence: List,
         shorter ones are padded to it.
 
     default_value: Callable, default=lambda: 0
-        Callable that output a default value (of any type) to use as padding values.  This is
+        Callable that outputs a default value (of any type) to use as padding values.  This is
         a lambda to avoid using the same object when the default value is more complex, like a
         list.
 
@@ -179,7 +179,7 @@ def prepare_environment(params: Params):
     """
     Sets random seeds for reproducible experiments. This may not work as expected
     if you use this from within a python project in which you have already imported Pytorch.
-    If you use the scripts/run_model.py entry point to training models with this library,
+    If you use the scripts/run_model.py entry point to training generators_discriminators with this library,
     your experiments should be reasonably reproducible. If you are using this from your own
     project, you will want to call this function before importing Pytorch. Complete determinism
     is very difficult to achieve with libraries doing optimized linear algebra due to massively
@@ -240,7 +240,7 @@ LOADED_SPACY_MODELS: Dict[Tuple[str, bool, bool, bool], SpacyModelType] = {}
 
 def get_spacy_model(spacy_model_name: str, pos_tags: bool, parse: bool, ner: bool) -> SpacyModelType:
     """
-    In order to avoid loading spacy models a whole bunch of times, we'll save references to them,
+    In order to avoid loading spacy generators_discriminators a whole bunch of times, we'll save references to them,
     keyed by the options we used to create the spacy model, so any particular configuration only
     gets loaded once.
     """
@@ -257,7 +257,7 @@ def get_spacy_model(spacy_model_name: str, pos_tags: bool, parse: bool, ner: boo
         try:
             spacy_model = spacy.load(spacy_model_name, disable=disable)
         except OSError:
-            logger.warning(f"Spacy models '{spacy_model_name}' not found.  Downloading and installing.")
+            logger.warning(f"Spacy generators_discriminators '{spacy_model_name}' not found.  Downloading and installing.")
             spacy_download(spacy_model_name)
             spacy_model = spacy.load(spacy_model_name, disable=disable)
 

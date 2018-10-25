@@ -104,7 +104,7 @@ class OpenaiTransformerBytePairIndexer(TokenIndexer[int]):
 
     @overrides
     def count_vocab_items(self, token: Token, counter: Dict[str, Dict[str, int]]):
-        # If we only use pretrained models, we don't need to do anything here.
+        # If we only use pretrained generators_discriminators, we don't need to do anything here.
         pass
 
     def byte_pair_encode(self, token: Token, lowercase: bool = True) -> List[str]:

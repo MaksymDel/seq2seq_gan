@@ -1,7 +1,7 @@
 """
 The ``elmo`` subcommand allows you to make bulk ELMo predictions.
 
-Given a pre-processed input text file, this command output the internal
+Given a pre-processed input text file, this command outputs the internal
 layers used to compute ELMo representations to a single (potentially large) file.
 
 The input file is previously tokenized, whitespace separated text, one sentence per line.
@@ -78,8 +78,8 @@ from allennlp.commands.subcommand import Subcommand
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
-DEFAULT_OPTIONS_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_options.json" # pylint: disable=line-too-long
-DEFAULT_WEIGHT_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5" # pylint: disable=line-too-long
+DEFAULT_OPTIONS_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/generators_discriminators/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_options.json" # pylint: disable=line-too-long
+DEFAULT_WEIGHT_FILE = "https://s3-us-west-2.amazonaws.com/allennlp/generators_discriminators/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5" # pylint: disable=line-too-long
 DEFAULT_BATCH_SIZE = 64
 
 
@@ -118,7 +118,7 @@ class Elmo(Subcommand):
                 help='The path to the ELMo weight file.')
         subparser.add_argument('--batch-size', type=int, default=DEFAULT_BATCH_SIZE, help='The batch size to use.')
         subparser.add_argument('--file-friendly-logging', default=False, action='store_true',
-                               help='output tqdm status on separate lines and slows tqdm refresh rate.')
+                               help='outputs tqdm status on separate lines and slows tqdm refresh rate.')
         subparser.add_argument('--cuda-device', type=int, default=-1, help='The cuda_device to run on.')
         subparser.add_argument(
                 '--forget-sentences',

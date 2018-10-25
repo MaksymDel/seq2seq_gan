@@ -290,7 +290,7 @@ class Event2Mind(Model):
                   targets: torch.LongTensor,
                   target_mask: torch.LongTensor) -> torch.FloatTensor:
         """
-        Takes logits (unnormalized output from the decoder) of size (batch_size,
+        Takes logits (unnormalized outputs from the decoder) of size (batch_size,
         num_decoding_steps, num_classes), target indices of size (batch_size, num_decoding_steps+1)
         and corresponding masks of size (batch_size, num_decoding_steps+1) steps and computes cross
         entropy loss while taking the mask into account.

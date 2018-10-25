@@ -81,7 +81,7 @@ class NlvrCoverageSemanticParserTest(ModelTestCase):
             with self.assertRaises(AssertionError, msg=f"{name} has not changed"):
                 assert_almost_equal(original_weight, changed_weight)
             # This also includes the sentence token embedder. Those weights will be the same
-            # because the two models have the same vocabulary.
+            # because the two generators_discriminators have the same vocabulary.
             assert_almost_equal(archived_weight, changed_weight)
 
     def test_get_vocab_index_mapping(self):

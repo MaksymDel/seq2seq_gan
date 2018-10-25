@@ -109,7 +109,7 @@ def make_app(predictor: Predictor,
         if sanitizer is not None:
             prediction = sanitizer(prediction)
 
-        log_blob = {"inputs": data, "output": prediction}
+        log_blob = {"inputs": data, "outputs": prediction}
         logger.info("prediction: %s", json.dumps(log_blob))
 
         return jsonify(prediction)

@@ -7,11 +7,11 @@ from allennlp.models.model import Model
 from allennlp.modules import Seq2VecEncoder
 from allennlp.modules.token_embedders import Embedding
 from allennlp.nn import util
-from utils_data import *
+from misc.utils_data import *
 from torch.nn import Sigmoid
 from torch.nn.modules import Linear
 
-#Model.register("seq2prob")
+Model.register("seq2prob")
 class Seq2Prob(Model):
     """
     Converts sequence to probability
@@ -30,8 +30,8 @@ class Seq2Prob(Model):
 
     def __init__(self,
                  vocab: Vocabulary,
-                 embedding: Embedding,
-                 encoder: Seq2VecEncoder) -> None:
+                 encoder: Seq2VecEncoder,
+                 embedding: Embedding = None) -> None:
         super().__init__(vocab)
         # Dense embedding of source vocab tokens.
         self._embedding = embedding

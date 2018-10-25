@@ -17,7 +17,7 @@ class DecoderTrainer(Generic[SupervisionType]):
 
     Concrete implementations of this abstract base class could do things like maximum marginal
     likelihood, SEARN, LaSO, or other structured learning algorithms.  If you're just trying to
-    maximize the probability of a single target sequence where the possible output are the same
+    maximize the probability of a single target sequence where the possible outputs are the same
     for each timestep (as in, e.g., typical machine translation training regimes), there are way
     more efficient ways to do that than using this API.
     """

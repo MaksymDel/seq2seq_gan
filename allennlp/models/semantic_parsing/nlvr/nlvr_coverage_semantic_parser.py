@@ -58,7 +58,7 @@ class NlvrCoverageSemanticParser(NlvrSemanticParser):
     max_decoding_steps : ``int``
         Maximum number of steps for the beam search during training.
     dropout : ``float``, optional (default=0.0)
-        Probability of dropout to apply on encoder output, decoder output and predicted actions.
+        Probability of dropout to apply on encoder outputs, decoder outputs and predicted actions.
     checklist_cost_weight : ``float``, optional (default=0.6)
         Mixture weight (0-1) for combining coverage cost and denotation cost. As this increases, we
         weigh the coverage cost higher, with a value of 1.0 meaning that we do not care about
@@ -148,7 +148,7 @@ class NlvrCoverageSemanticParser(NlvrSemanticParser):
         for name, weights in archived_parameters.items():
             if name in model_parameters:
                 if name == "_sentence_embedder.token_embedder_tokens.weight":
-                    # The shapes of embedding weights will most likely differ between the two models
+                    # The shapes of embedding weights will most likely differ between the two generators_discriminators
                     # because the vocabularies will most likely be different. We will get a mapping
                     # of indices from this model's token indices to the archived model's and copy
                     # the tensor accordingly.

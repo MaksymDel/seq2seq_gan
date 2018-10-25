@@ -31,12 +31,12 @@ class RnnStatelet:
         attention as part of our decoder cell update.  Has shape ``(encoder_output_dim,)``.
     encoder_outputs : ``List[torch.Tensor]``
         A list of variables, each of shape ``(input_sequence_length, encoder_output_dim)``,
-        containing the encoder output at each timestep.  The list is over batch elements, and we
+        containing the encoder outputs at each timestep.  The list is over batch elements, and we
         do the input this way so we can easily do a ``torch.cat`` on a list of indices into this
         batched list.
 
-        Note that all of the above parameters are single tensors, while the encoder output and
-        mask are lists of length ``batch_size``.  We always pass around the encoder output and
+        Note that all of the above parameters are single tensors, while the encoder outputs and
+        mask are lists of length ``batch_size``.  We always pass around the encoder outputs and
         mask unmodified, regardless of what's in the grouping for this state.  We'll use the
         ``batch_indices`` for the group to pull pieces out of these lists when we're ready to
         actually do some computation.

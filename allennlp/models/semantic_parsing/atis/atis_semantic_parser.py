@@ -174,7 +174,7 @@ class AtisSemanticParser(Model):
                                                 self._transition_function,
                                                 (target_action_sequence.unsqueeze(1), target_mask.unsqueeze(1)))
         else:
-            # TODO(kevin) Move some of this functionality to a separate method for computing validation output.
+            # TODO(kevin) Move some of this functionality to a separate method for computing validation outputs.
             action_mapping = {}
             for batch_index, batch_actions in enumerate(actions):
                 for action_index, action in enumerate(batch_actions):
@@ -272,7 +272,7 @@ class AtisSemanticParser(Model):
         initial_score = embedded_utterance.data.new_zeros(batch_size)
 
         # To make grouping states together in the decoder easier, we convert the batch dimension in
-        # all of our tensors into an outer list.  For instance, the encoder output have shape
+        # all of our tensors into an outer list.  For instance, the encoder outputs have shape
         # `(batch_size, utterance_length, encoder_output_dim)`.  We need to convert this into a list
         # of `batch_size` tensors, each of shape `(utterance_length, encoder_output_dim)`.  Then we
         # won't have to do any index selects, or anything, we'll just do some `torch.cat()`s.

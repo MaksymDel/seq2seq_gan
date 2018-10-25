@@ -1,6 +1,5 @@
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
-import numpy
 from overrides import overrides
 import torch
 import torch.nn.functional as F
@@ -9,7 +8,6 @@ from torch.nn.modules.rnn import LSTMCell
 
 from allennlp.common.checks import ConfigurationError
 from allennlp.common.util import START_SYMBOL, END_SYMBOL
-from allennlp.data.vocabulary import Vocabulary
 from allennlp.modules.attention import LegacyAttention
 from allennlp.modules import Attention, Seq2SeqEncoder
 from allennlp.modules.similarity_functions import SimilarityFunction
@@ -18,17 +16,17 @@ from allennlp.modules.token_embedders import Embedding
 from allennlp.nn import util
 from allennlp.nn.beam_search import BeamSearch
 
-from utils_data import *
+from misc.utils_data import *
 
 
-#Model.register("rnn2rnn")
+Model.register("rnn2rnn")
 class Rnn2Rnn(Model):
     """
     This ``Rnn2Rnn`` class is a :class:`Model` which takes a sequence, encodes it, and then
     uses the encoded representations to decode another sequence.  You can use this as the basis for
     a neural machine translation system, an abstractive summarization system, or any other common
     seq2seq problem.  The model here is simple, but should be a decent starting place for
-    implementing recent models for these tasks.
+    implementing recent generators_discriminators for these tasks.
 
     Parameters
     ----------
@@ -67,16 +65,57 @@ class Rnn2Rnn(Model):
         2015 <https://arxiv.org/abs/1506.03099>`_.
     """
 
+    def take_step(self,
+                  last_predictions: torch.Tensor,
+                  state: Dict[str, torch.Tensor]) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        """
+        Take a decoding step. This is called by the beam search class.
+
+        Parameters
+        ----------
+        last_predictions : ``torch.Tensor``
+            A tensor of shape ``(group_size,)``, which gives the indices of the predictions
+            during the last time step.
+        state : ``Dict[str, torch.Tensor]``
+            A dictionary of tensors that contain the current state information
+            needed to predict the next step, which includes the encoder output,
+            the source mask, and the decoder hidden state and context. Each of these
+            tensors has shape ``(group_size, *)``, where ``*`` can be any other number
+            of dimensions.
+
+        Returns
+        -------
+        Tuple[torch.Tensor, Dict[str, torch.Tensor]]
+            A tuple of ``(log_probabilities, updated_state)``, where ``log_probabilities``
+            is a tensor of shape ``(group_size, num_classes)`` containing the predicted
+            log probability of each class for the next step, for each item in the group,
+            while ``updated_state`` is a dictionary of tensors containing the encoder output,
+            source mask, and updated decoder hidden state and context.
+
+        Notes
+        -----
+            We treat the inputs as a batch, even though ``group_size`` is not necessarily
+            equal to ``batch_size``, since the group may contain multiple states
+            for each source sentence in the batch.
+        """
+        # shape: (group_size, num_classes)
+        output_projections, state = self._prepare_output_projections(last_predictions, state)
+
+        # shape: (group_size, num_classes)
+        class_log_probabilities = F.log_softmax(output_projections, dim=-1)
+
+        return class_log_probabilities, state
+
     def __init__(self,
                  vocab: Vocabulary,
                  source_embedding: Embedding,
                  target_embedding: Embedding,
                  encoder: Seq2SeqEncoder,
+                 target_namespace: str,
                  max_decoding_steps: int,
                  attention: Attention = None,
                  attention_function: SimilarityFunction = None,
                  beam_size: int = None,
-                 target_namespace: str = "tokens",
                  scheduled_sampling_ratio: float = 0.) -> None:
         super().__init__(vocab)
         self._target_namespace = target_namespace
@@ -141,47 +180,6 @@ class Rnn2Rnn(Model):
             self._beam_search = BeamSearch(self._end_index, max_steps=max_decoding_steps, beam_size=beam_size)
         else:
             self._beam_search = None
-
-    def take_step(self,
-                  last_predictions: torch.Tensor,
-                  state: Dict[str, torch.Tensor]) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
-        """
-        Take a decoding step. This is called by the beam search class.
-
-        Parameters
-        ----------
-        last_predictions : ``torch.Tensor``
-            A tensor of shape ``(group_size,)``, which gives the indices of the predictions
-            during the last time step.
-        state : ``Dict[str, torch.Tensor]``
-            A dictionary of tensors that contain the current state information
-            needed to predict the next step, which includes the encoder output,
-            the source mask, and the decoder hidden state and context. Each of these
-            tensors has shape ``(group_size, *)``, where ``*`` can be any other number
-            of dimensions.
-
-        Returns
-        -------
-        Tuple[torch.Tensor, Dict[str, torch.Tensor]]
-            A tuple of ``(log_probabilities, updated_state)``, where ``log_probabilities``
-            is a tensor of shape ``(group_size, num_classes)`` containing the predicted
-            log probability of each class for the next step, for each item in the group,
-            while ``updated_state`` is a dictionary of tensors containing the encoder output,
-            source mask, and updated decoder hidden state and context.
-
-        Notes
-        -----
-            We treat the inputs as a batch, even though ``group_size`` is not necessarily
-            equal to ``batch_size``, since the group may contain multiple states
-            for each source sentence in the batch.
-        """
-        # shape: (group_size, num_classes)
-        output_projections, state = self._prepare_output_projections(last_predictions, state)
-
-        # shape: (group_size, num_classes)
-        class_log_probabilities = F.log_softmax(output_projections, dim=-1)
-
-        return class_log_probabilities, state
 
 
 

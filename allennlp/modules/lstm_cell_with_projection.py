@@ -23,7 +23,7 @@ class LstmCellWithProjection(torch.nn.Module):
     input_size : ``int``, required.
         The dimension of the inputs to the LSTM.
     hidden_size : ``int``, required.
-        The dimension of the output of the LSTM.
+        The dimension of the outputs of the LSTM.
     cell_size : ``int``, required.
         The dimension of the memory cell used for the LSTM.
     go_forward: ``bool``, optional (default = True)
@@ -43,9 +43,9 @@ class LstmCellWithProjection(torch.nn.Module):
     Returns
     -------
     output_accumulator : ``torch.FloatTensor``
-        The output of the LSTM for each timestep. A tensor of shape
+        The outputs of the LSTM for each timestep. A tensor of shape
         (batch_size, max_timesteps, hidden_size) where for a given batch
-        element, all output past the sequence length for that batch are
+        element, all outputs past the sequence length for that batch are
         zero tensors.
     final_state: ``Tuple[torch.FloatTensor, torch.FloatTensor]``
         The final (state, memory) states of the LSTM, with shape
@@ -110,9 +110,9 @@ class LstmCellWithProjection(torch.nn.Module):
         Returns
         -------
         output_accumulator : ``torch.FloatTensor``
-            The output of the LSTM for each timestep. A tensor of shape
+            The outputs of the LSTM for each timestep. A tensor of shape
             (batch_size, max_timesteps, hidden_size) where for a given batch
-            element, all output past the sequence length for that batch are
+            element, all outputs past the sequence length for that batch are
             zero tensors.
         final_state : ``Tuple[``torch.FloatTensor, torch.FloatTensor]``
             A tuple (state, memory) representing the initial hidden state and memory

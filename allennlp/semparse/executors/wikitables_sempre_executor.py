@@ -95,7 +95,7 @@ class WikiTablesSempreExecutor:
 
         lines = []
         for _ in range(6):
-            # SEMPRE output six lines of stuff when it loads that I can't disable.  So, we clear
+            # SEMPRE outputs six lines of stuff when it loads that I can't disable.  So, we clear
             # that here.
             lines.append(str(self._executor_process.stdout.readline()))
         assert 'Parser' in lines[-1], "SEMPRE server output unexpected; the server may have changed"

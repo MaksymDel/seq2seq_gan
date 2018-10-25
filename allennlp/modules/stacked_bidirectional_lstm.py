@@ -18,7 +18,7 @@ class StackedBidirectionalLstm(torch.nn.Module):
     input_size : int, required
         The dimension of the inputs to the LSTM.
     hidden_size : int, required
-        The dimension of the output of the LSTM.
+        The dimension of the outputs of the LSTM.
     num_layers : int, required
         The number of stacked Bidirectional LSTMs to use.
     recurrent_dropout_probability: float, optional (default = 0.0)

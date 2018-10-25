@@ -60,7 +60,7 @@ NODE_TYPE_TO_STYLE["UCP"] = ["color5"]
 @Predictor.register('constituency-parser')
 class ConstituencyParserPredictor(Predictor):
     """
-    Predictor for the :class:`~allennlp.models.SpanConstituencyParser` model.
+    Predictor for the :class:`~allennlp.generators_discriminators.SpanConstituencyParser` model.
     """
     def __init__(self, model: Model, dataset_reader: DatasetReader) -> None:
         super().__init__(model, dataset_reader)

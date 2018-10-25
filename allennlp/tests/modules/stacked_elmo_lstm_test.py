@@ -25,7 +25,7 @@ class TestElmoLstmCell(AllenNlpTestCase):
                         state_projection_clip_value=1)
         output_sequence = lstm(input_tensor, mask)
 
-        # Check all the layer output are masked properly.
+        # Check all the layer outputs are masked properly.
         numpy.testing.assert_array_equal(output_sequence.data[:, 1, 4:, :].numpy(), 0.0)
         numpy.testing.assert_array_equal(output_sequence.data[:, 2, 2:, :].numpy(), 0.0)
         numpy.testing.assert_array_equal(output_sequence.data[:, 3, 1:, :].numpy(), 0.0)

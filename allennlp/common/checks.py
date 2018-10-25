@@ -1,6 +1,6 @@
 """
 Functions and exceptions for checking that
-AllenNLP and its models are configured correctly.
+AllenNLP and its generators_discriminators are configured correctly.
 """
 
 import logging

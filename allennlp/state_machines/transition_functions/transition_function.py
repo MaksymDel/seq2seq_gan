@@ -12,7 +12,7 @@ class TransitionFunction(torch.nn.Module, Generic[StateType]):
     A ``TransitionFunction`` is a module that assigns scores to state transitions in a
     transition-based decoder.
 
-    The ``TransitionFunction`` takes a ``State`` and output a ranked list of next states, ordered
+    The ``TransitionFunction`` takes a ``State`` and outputs a ranked list of next states, ordered
     by the state's score.
 
     The intention with this class is that a model will implement a subclass of

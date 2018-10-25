@@ -13,7 +13,7 @@ _VALID_PROJECTION_LOCATIONS = {'after_cnn', 'after_highway', None}
 @Seq2VecEncoder.register('cnn-highway')
 class CnnHighwayEncoder(Seq2VecEncoder):
     """
-    The character CNN + highway encoder from Kim et al "Character aware neural language models"
+    The character CNN + highway encoder from Kim et al "Character aware neural language generators_discriminators"
     https://arxiv.org/abs/1508.06615
     with an optional projection.
 

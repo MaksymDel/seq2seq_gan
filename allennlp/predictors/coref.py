@@ -10,7 +10,7 @@ from allennlp.predictors.predictor import Predictor
 @Predictor.register("coreference-resolution")
 class CorefPredictor(Predictor):
     """
-    Predictor for the :class:`~allennlp.models.coreference_resolution.CoreferenceResolver` model.
+    Predictor for the :class:`~allennlp.generators_discriminators.coreference_resolution.CoreferenceResolver` model.
     """
     def __init__(self, model: Model, dataset_reader: DatasetReader) -> None:
         super().__init__(model, dataset_reader)

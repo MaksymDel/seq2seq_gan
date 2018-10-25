@@ -66,7 +66,7 @@ def format_action(nonterminal: str,
                   is_number: bool = False,
                   keywords_to_uppercase: List[str] = None) -> str:
     """
-    This function formats an action as it appears in models. It
+    This function formats an action as it appears in generators_discriminators. It
     splits productions based on the special `ws` and `wsp` rules,
     which are used in grammars to denote whitespace, and then
     rejoins these tokens a formatted, comma separated list.

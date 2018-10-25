@@ -6,9 +6,12 @@ from allennlp.data.token_indexers import SingleIdTokenIndexer
 from allennlp.data.tokenizers import WordTokenizer
 from allennlp.data.tokenizers.word_splitter import JustSpacesWordSplitter
 from allennlp.nn.beam_search import BeamSearch
-from build_modules import build_modules
-from utils_data import *
-from utils_nn import *
+from misc.build_modules import build_modules
+from misc.utils_data import *
+from misc.utils_nn import *
+
+# TODO : switch to AllenNLP API
+# TODO: add tests?
 
 torch.manual_seed(1)
 
@@ -277,7 +280,7 @@ for epoch_num in range(opt.epoch, opt.n_epochs):
     lr_scheduler_generators.step()
     lr_scheduler_discriminators.step()
 
-    # Save models checkpoints
+    # Save generators_discriminators checkpoints
     torch.save(modules_dict['generator_a2b'].state_dict(), 'output/netG_A2B.pth')
     torch.save(modules_dict['generator_b2a'].state_dict(), 'output/netG_B2A.pth')
     torch.save(modules_dict['discriminator_a'].state_dict(), 'output/netD_A.pth')

@@ -110,7 +110,7 @@ def block_orthogonal(tensor: torch.Tensor,
                      gain: float = 1.0) -> None:
     """
     An initializer which allows initializing model parameters in "blocks". This is helpful
-    in the case of recurrent models which use multiple gates applied to linear projections,
+    in the case of recurrent generators_discriminators which use multiple gates applied to linear projections,
     which can be computed efficiently if they are concatenated together. However, they are
     separate parameters which should be initialized independently.
 

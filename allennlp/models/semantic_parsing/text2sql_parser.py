@@ -235,7 +235,7 @@ class Text2SqlParser(Model):
         initial_score = encoder_outputs.data.new_zeros(batch_size)
 
         # To make grouping states together in the decoder easier, we convert the batch dimension in
-        # all of our tensors into an outer list.  For instance, the encoder output have shape
+        # all of our tensors into an outer list.  For instance, the encoder outputs have shape
         # `(batch_size, utterance_length, encoder_output_dim)`.  We need to convert this into a list
         # of `batch_size` tensors, each of shape `(utterance_length, encoder_output_dim)`.  Then we
         # won't have to do any index selects, or anything, we'll just do some `torch.cat()`s.

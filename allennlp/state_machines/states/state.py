@@ -34,7 +34,7 @@ class State(Generic[T]):
         Our internal variables (like scores, action histories, hidden states, whatever) are
         `grouped`, and our ``group_size`` is likely different from the original ``batch_size``.
         This variable keeps track of which batch instance each group element came from (e.g., to
-        know what the correct action sequences are, or which encoder output to use).
+        know what the correct action sequences are, or which encoder outputs to use).
     action_history : ``List[List[int]]``
         The list of actions taken so far in this state.  This is also grouped, so each state in the
         group has a list of actions.

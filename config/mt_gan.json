@@ -1,0 +1,59 @@
+{
+  "dataset_reader": {
+    "type": "unaligned_corpora"
+  },
+  "train_data_path": "toy_data/train.txt",
+  "validation_data_path": "toy_data/dev.txt",
+
+  "model": {
+    "type": "mt_gan",
+    // ============= GENERRATORS ARCHITECTURE =============
+    "generators": {
+      "type": "rnn2rnn",
+      "embedding_dim": 30,
+      "max_decoding_steps": 15,
+      "encoder": {
+        "type": "lstm",
+        "input_size": 30,
+        "hidden_size": 30,
+        "num_layers": 1,
+        "bidirectional": true
+      },
+      "attention": {
+        "type": "dot_product"
+      },
+      "beam_size": 5
+    },
+
+    // ============= DISCRIMINATORS ARCHITECTURE =============
+    "discriminators": {
+      "type": "seq2prob",
+      "embedding_dim": 30,
+      "encoder": {
+        "type": "lstm",
+        "input_size": 30,
+        "hidden_size": 30,
+        "num_layers": 1,
+        "bidirectional": true
+      }
+    }
+  },
+
+  "iterator": {
+    "type": "basic",
+    "batch_size" : 3
+    // "padding_noise": 0.0,
+    //"sorting_keys": [["source_tokens", "num_tokens"]]
+  },
+
+  "trainer": {
+    "num_epochs": 2,
+    "patience": 10,
+    "shuffle": false,
+    "cuda_device": -1,
+    "optimizer": {
+      "type": "adam",
+      "lr": 0.01
+    }
+  }
+}

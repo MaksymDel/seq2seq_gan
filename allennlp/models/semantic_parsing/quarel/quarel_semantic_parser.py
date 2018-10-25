@@ -86,7 +86,7 @@ class QuarelSemanticParser(Model):
                  entity_bits_output: bool = True,
                  use_entities: bool = False,
                  denotation_only: bool = False,
-                 # Deprecated parameter to load older models
+                 # Deprecated parameter to load older generators_discriminators
                  entity_encoder: Seq2VecEncoder = None,  # pylint: disable=unused-argument
                  entity_similarity_mode: str = "dot_product",
                  rule_namespace: str = 'rule_labels') -> None:
@@ -330,7 +330,7 @@ class QuarelSemanticParser(Model):
             target_mask = None
 
         # To make grouping states together in the decoder easier, we convert the batch dimension in
-        # all of our tensors into an outer list.  For instance, the encoder output have shape
+        # all of our tensors into an outer list.  For instance, the encoder outputs have shape
         # `(batch_size, question_length, encoder_output_dim)`.  We need to convert this into a list
         # of `batch_size` tensors, each of shape `(question_length, encoder_output_dim)`.  Then we
         # won't have to do any index selects, or anything, we'll just do some `torch.cat()`s.
@@ -397,7 +397,7 @@ class QuarelSemanticParser(Model):
                 outputs['linking_probabilities'] = linking_probabilities
             if entity_bits is not None:
                 outputs['entity_bits'] = entity_bits
-            # output['similarity_scores'] = question_entity_similarity_max_score
+            # outputs['similarity_scores'] = question_entity_similarity_max_score
             outputs['logical_form'] = []
             outputs['denotation_acc'] = []
             outputs['score'] = []

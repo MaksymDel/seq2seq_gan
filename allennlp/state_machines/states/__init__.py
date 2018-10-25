@@ -7,7 +7,7 @@ grammar).
 The module also has some ``Statelet`` classes to help represent the ``State`` by grouping together
 related pieces, including ``RnnStatelet``, which you can use to keep track of a decoder RNN's
 internal state, ``GrammarStatelet``, which keeps track of what actions are allowed at each timestep
-of decoding (if your output are production rules from a grammar), and ``ChecklistStatelet`` that
+of decoding (if your outputs are production rules from a grammar), and ``ChecklistStatelet`` that
 keeps track of coverage information if you are training a coverage-based parser.
 """
 from allennlp.state_machines.states.checklist_statelet import ChecklistStatelet

@@ -47,7 +47,7 @@ class NlvrDirectSemanticParser(NlvrSemanticParser):
     max_decoding_steps : ``int``
         Maximum number of steps for beam search after training.
     dropout : ``float``, optional (default=0.0)
-        Probability of dropout to apply on encoder output, decoder output and predicted actions.
+        Probability of dropout to apply on encoder outputs, decoder outputs and predicted actions.
     """
     def __init__(self,
                  vocab: Vocabulary,

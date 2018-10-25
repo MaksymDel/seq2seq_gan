@@ -149,7 +149,7 @@ class WikiTablesSemanticParser(Model):
         initial RnnStatelet and LambdaGrammarStatelet for each batch instance to pass to the
         decoder.
 
-        We take ``output`` as a parameter here and `modify` it, adding things that we want to
+        We take ``outputs`` as a parameter here and `modify` it, adding things that we want to
         visualize in a demo.
         """
         table_text = table['text']
@@ -267,7 +267,7 @@ class WikiTablesSemanticParser(Model):
         memory_cell = encoder_outputs.new_zeros(batch_size, self._encoder.get_output_dim())
 
         # To make grouping states together in the decoder easier, we convert the batch dimension in
-        # all of our tensors into an outer list.  For instance, the encoder output have shape
+        # all of our tensors into an outer list.  For instance, the encoder outputs have shape
         # `(batch_size, question_length, encoder_output_dim)`.  We need to convert this into a list
         # of `batch_size` tensors, each of shape `(question_length, encoder_output_dim)`.  Then we
         # won't have to do any index selects, or anything, we'll just do some `torch.cat()`s.
@@ -287,7 +287,7 @@ class WikiTablesSemanticParser(Model):
                                                             entity_types[i])
                                  for i in range(batch_size)]
         if not self.training:
-            # We add a few things to the output that will be returned from `forward` at evaluation
+            # We add a few things to the outputs that will be returned from `forward` at evaluation
             # time, for visualization in a demo.
             outputs['linking_scores'] = linking_scores
             if feature_scores is not None:
@@ -630,7 +630,7 @@ class WikiTablesSemanticParser(Model):
         Does common things for validation time: computing logical form accuracy (which is expensive
         and unnecessary during training), adding visualization info to the output dictionary, etc.
 
-        This doesn't return anything; instead it `modifies` the given ``output`` dictionary, and
+        This doesn't return anything; instead it `modifies` the given ``outputs`` dictionary, and
         calls metrics on ``self``.
         """
         batch_size = len(actions)

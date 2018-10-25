@@ -68,7 +68,7 @@ class FineTune(Subcommand):
         subparser.add_argument('--file-friendly-logging',
                                action='store_true',
                                default=False,
-                               help='output tqdm status on separate lines and slows tqdm refresh rate')
+                               help='outputs tqdm status on separate lines and slows tqdm refresh rate')
 
         subparser.set_defaults(func=fine_tune_model_from_args)
 

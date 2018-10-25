@@ -1,6 +1,6 @@
 """
 One of the design principles of AllenNLP is the use of a modular,
-declarative language (JSON) for defining experiments and models.
+declarative language (JSON) for defining experiments and generators_discriminators.
 
 This is implemented by giving each AllenNLP class a method
 

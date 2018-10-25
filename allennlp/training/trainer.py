@@ -1,6 +1,6 @@
 """
 A :class:`~allennlp.training.trainer.Trainer` is responsible for training a
-:class:`~allennlp.models.model.Model`.
+:class:`~allennlp.generators_discriminators.model.Model`.
 
 Typically you might create a configuration file specifying the model and
 training parameters and then use :mod:`~allennlp.commands.train`
@@ -222,13 +222,13 @@ class Trainer(Registrable):
             A value of None or -1 means all checkpoints will be kept.
         keep_serialized_model_every_num_seconds : ``int``, optional (default=None)
             If num_serialized_models_to_keep is not None, then occasionally it's useful to
-            save models at a given interval in addition to the last num_serialized_models_to_keep.
+            save generators_discriminators at a given interval in addition to the last num_serialized_models_to_keep.
             To do so, specify keep_serialized_model_every_num_seconds as the number of seconds
             between permanently saved checkpoints.  Note that this option is only used if
             num_serialized_models_to_keep is not None, otherwise all checkpoints are kept.
         model_save_interval : ``float``, optional (default=None)
-            If provided, then serialize models every ``model_save_interval``
-            seconds within single epochs.  In all cases, models are also saved
+            If provided, then serialize generators_discriminators every ``model_save_interval``
+            seconds within single epochs.  In all cases, generators_discriminators are also saved
             at the end of every epoch if ``serialization_dir`` is provided.
         cuda_device : ``int``, optional (default = -1)
             An integer specifying the CUDA device to use. If -1, the CPU is used.
@@ -506,7 +506,7 @@ class Trainer(Registrable):
             if self._log_histograms_this_batch:
                 # get the magnitude of parameter updates for logging
                 # We need a copy of current parameters to compute magnitude of updates,
-                # and copy them to CPU so large models won't go OOM on the GPU.
+                # and copy them to CPU so large generators_discriminators won't go OOM on the GPU.
                 param_updates = {name: param.detach().cpu().clone()
                                  for name, param in self.model.named_parameters()}
                 self.optimizer.step()
@@ -964,7 +964,7 @@ class Trainer(Registrable):
         model_path, training_state_path = latest_checkpoint
 
         # Load the parameters onto CPU, then transfer to GPU.
-        # This avoids potential OOM on GPU for large models that
+        # This avoids potential OOM on GPU for large generators_discriminators that
         # load parameters onto GPU then make a new GPU copy into the parameter
         # buffer. The GPU transfer happens implicitly in load_state_dict.
         model_state = torch.load(model_path, map_location=util.device_mapping(-1))

@@ -4,8 +4,8 @@ from allennlp.modules import Embedding
 from allennlp.modules.attention.dot_product_attention import DotProductAttention
 from allennlp.modules.seq2seq_encoders import PytorchSeq2SeqWrapper
 from allennlp.modules.seq2vec_encoders import PytorchSeq2VecWrapper
-from utils_data import *
-from models import *
+from misc.utils_data import *
+from mt_gan.generators_discriminators import *
 
 
 def build_modules(vocab, opt) -> Dict[str, Any]:

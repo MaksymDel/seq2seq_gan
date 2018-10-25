@@ -28,7 +28,7 @@ DEFAULT_PREDICTORS = {
 class Predictor(Registrable):
     """
     a ``Predictor`` is a thin wrapper around an AllenNLP model that handles JSON -> JSON predictions
-    that can be used for serving models through the web API or making predictions in bulk.
+    that can be used for serving generators_discriminators through the web API or making predictions in bulk.
     """
     def __init__(self, model: Model, dataset_reader: DatasetReader) -> None:
         self._model = model
@@ -43,7 +43,7 @@ class Predictor(Registrable):
 
     def dump_line(self, outputs: JsonDict) -> str:  # pylint: disable=no-self-use
         """
-        If you don't want your output in JSON-lines format
+        If you don't want your outputs in JSON-lines format
         you can override this function to output them differently.
         """
         return json.dumps(outputs) + "\n"
@@ -107,7 +107,7 @@ class Predictor(Registrable):
     @classmethod
     def from_archive(cls, archive: Archive, predictor_name: str = None) -> 'Predictor':
         """
-        Instantiate a :class:`Predictor` from an :class:`~allennlp.models.archival.Archive`;
+        Instantiate a :class:`Predictor` from an :class:`~allennlp.generators_discriminators.archival.Archive`;
         that is, from the result of training a model. Optionally specify which `Predictor`
         subclass; otherwise, the default one for the model will be used.
         """

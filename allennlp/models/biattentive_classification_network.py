@@ -30,7 +30,7 @@ class BiattentiveClassificationNetwork(Model):
     on the encoder output represenatations (self-attention in this case, since
     the two representations that typically go into biattention are identical) and
     get out an attentive vector representation of the text. We combine this text
-    representation with the encoder output computed earlier, and then run this through
+    representation with the encoder outputs computed earlier, and then run this through
     yet another ``Seq2SeqEncoder`` (the ``integrator``). Lastly, we take the output of the
     integrator and max, min, mean, and self-attention pool to create a final representation,
     which is passed through a maxout network or some feed-forward layers

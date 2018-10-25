@@ -5,7 +5,7 @@ from allennlp.common import Registrable
 class TokenEmbedder(torch.nn.Module, Registrable):
     """
     A ``TokenEmbedder`` is a ``Module`` that takes as input a tensor with integer ids that have
-    been output from a :class:`~allennlp.data.TokenIndexer` and output a vector per token in the
+    been output from a :class:`~allennlp.data.TokenIndexer` and outputs a vector per token in the
     input.  The input typically has shape ``(batch_size, num_tokens)`` or ``(batch_size,
     num_tokens, num_characters)``, and the output is of shape ``(batch_size, num_tokens,
     output_dim)``.  The simplest ``TokenEmbedder`` is just an embedding layer, but for

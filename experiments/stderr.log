@@ -1,0 +1,111 @@
+0it [00:00, ?it/s]
+1077it [00:00, 10762.57it/s]
+1626it [00:00, 7960.97it/s] 
+3304it [00:00, 10858.41it/s]
+4077it [00:00, 9734.13it/s] 
+5633it [00:00, 9351.08it/s]
+7266it [00:00, 10343.99it/s]
+8448it [00:00, 9630.64it/s] 
+10036it [00:00, 10270.21it/s]
+11864it [00:01, 11013.31it/s]
+13199it [00:01, 10437.62it/s]
+14959it [00:01, 10962.51it/s]
+16439it [00:01, 10423.15it/s]
+18260it [00:01, 10887.28it/s]
+20142it [00:01, 11333.49it/s]
+21910it [00:02, 10802.72it/s]
+23644it [00:02, 11109.71it/s]
+25567it [00:02, 11473.95it/s]
+27341it [00:02, 11742.87it/s]
+28966it [00:02, 11098.74it/s]
+30854it [00:02, 11385.78it/s]
+32806it [00:02, 11675.09it/s]
+34732it [00:02, 11935.58it/s]
+36660it [00:03, 12179.46it/s]
+38439it [00:03, 11464.43it/s]
+40374it [00:03, 11692.68it/s]
+42247it [00:03, 11890.69it/s]
+44146it [00:03, 12084.91it/s]
+46051it [00:03, 12270.48it/s]
+47911it [00:04, 11602.04it/s]
+49745it [00:04, 11761.24it/s]
+51606it [00:04, 11919.31it/s]
+53568it [00:04, 12093.14it/s]
+55502it [00:04, 12252.99it/s]
+57351it [00:04, 12387.68it/s]
+59310it [00:04, 12539.85it/s]
+61201it [00:05, 11815.70it/s]
+63018it [00:05, 11935.93it/s]
+64970it [00:05, 12076.95it/s]
+66896it [00:05, 12208.03it/s]
+68670it [00:05, 12307.17it/s]
+70665it [00:05, 12441.70it/s]
+72602it [00:05, 12561.52it/s]
+74510it [00:05, 12672.37it/s]
+76405it [00:05, 12777.35it/s]
+78285it [00:06, 12019.47it/s]
+80257it [00:06, 12135.85it/s]
+82188it [00:06, 12242.69it/s]
+84092it [00:06, 12342.35it/s]
+85867it [00:06, 12420.52it/s]
+87795it [00:07, 12518.27it/s]
+89722it [00:07, 12613.15it/s]
+91636it [00:07, 12703.57it/s]
+93549it [00:07, 12791.43it/s]
+95473it [00:07, 12878.36it/s]
+97396it [00:07, 12962.94it/s]
+99298it [00:08, 12196.24it/s]
+100000it [00:08, 12225.66it/s]
+
+0it [00:00, ?it/s]
+1000it [00:00, 16869.32it/s]
+
+0it [00:00, ?it/s]
+5103it [00:00, 50990.90it/s]
+10254it [00:00, 51259.42it/s]
+15513it [00:00, 51698.87it/s]
+20599it [00:00, 51489.51it/s]
+25665it [00:00, 51323.17it/s]
+30718it [00:00, 51190.02it/s]
+35776it [00:00, 51102.34it/s]
+40887it [00:00, 51102.16it/s]
+45924it [00:00, 51020.73it/s]
+50907it [00:01, 50901.22it/s]
+56306it [00:01, 51180.51it/s]
+61844it [00:01, 51531.11it/s]
+67285it [00:01, 51752.50it/s]
+72679it [00:01, 51907.48it/s]
+77987it [00:01, 51857.56it/s]
+83259it [00:01, 51910.99it/s]
+88516it [00:01, 51903.00it/s]
+93750it [00:01, 51827.64it/s]
+99135it [00:01, 51933.19it/s]
+101000it [00:01, 51975.14it/s]
+
+  0%|          | 0/33334 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/del/anaconda3/envs/konstrukt/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/home/del/anaconda3/envs/konstrukt/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/del/research/mtgan/allennlp/run.py", line 18, in <module>
+    main(prog="allennlp")
+  File "/home/del/research/mtgan/allennlp/commands/__init__.py", line 72, in main
+    args.func(args)
+  File "/home/del/research/mtgan/allennlp/commands/train.py", line 111, in train_model_from_args
+    args.force)
+  File "/home/del/research/mtgan/allennlp/commands/train.py", line 142, in train_model_from_file
+    return train_model(params, serialization_dir, file_friendly_logging, recover, force)
+  File "/home/del/research/mtgan/allennlp/commands/train.py", line 346, in train_model
+    metrics = trainer.train()
+  File "/home/del/research/mtgan/allennlp/training/trainer.py", line 751, in train
+    train_metrics = self._train_epoch(epoch)
+  File "/home/del/research/mtgan/allennlp/training/trainer.py", line 494, in _train_epoch
+    loss = self.batch_loss(batch, for_training=True)
+  File "/home/del/research/mtgan/allennlp/training/trainer.py", line 429, in batch_loss
+    output_dict = self.model(**batch)
+  File "/home/del/anaconda3/envs/konstrukt/lib/python3.6/site-packages/torch/nn/modules/module.py", line 477, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/del/research/mtgan/mt_gan/mat_gan_model.py", line 114, in forward
+    tokens_onehotes_A = MtGan.ids_to_onehot(token_ids_A, self._num_classes_A)
+AttributeError: type object 'MtGan' has no attribute 'ids_to_onehot'

@@ -9,7 +9,7 @@ from allennlp.data.tokenizers.word_splitter import SpacyWordSplitter
 class TestOpenIePredictor(AllenNlpTestCase):
     def test_uses_named_inputs(self):
         """
-        Tests whether the model output conform to the expected format.
+        Tests whether the model outputs conform to the expected format.
         """
         inputs = {
                 "sentence": "Angela Merkel met and spoke to her EU counterparts during the climate summit."

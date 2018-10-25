@@ -26,7 +26,7 @@ class SimpleSeq2Seq(Model):
     uses the encoded representations to decode another sequence.  You can use this as the basis for
     a neural machine translation system, an abstractive summarization system, or any other common
     seq2seq problem.  The model here is simple, but should be a decent starting place for
-    implementing recent models for these tasks.
+    implementing recent generators_discriminators for these tasks.
 
     Parameters
     ----------
@@ -48,9 +48,9 @@ class SimpleSeq2Seq(Model):
         You can specify an embedding dimensionality for the target side. If not, we'll use the same
         value as the source embedder's.
     attention : ``Attention``, optional (default = None)
-        If you want to use attention to get a dynamic summary of the encoder output at each step
+        If you want to use attention to get a dynamic summary of the encoder outputs at each step
         of decoding, this is the function used to compute similarity between the decoder hidden
-        state and encoder output.
+        state and encoder outputs.
     attention_function: ``SimilarityFunction``, optional (default = None)
         This is if you want to use the legacy implementation of attention. This will be deprecated
         since it consumes more memory than the specialized attention modules.
@@ -115,7 +115,7 @@ class SimpleSeq2Seq(Model):
         self._decoder_output_dim = self._encoder_output_dim
 
         if self._attention:
-            # If using attention, a weighted average over encoder output will be concatenated
+            # If using attention, a weighted average over encoder outputs will be concatenated
             # to the previous target embedding to form the input to the decoder at each
             # time step.
             self._decoder_input_dim = self._decoder_output_dim + target_embedding_dim
@@ -153,7 +153,7 @@ class SimpleSeq2Seq(Model):
             during the last time step.
         state : ``Dict[str, torch.Tensor]``
             A dictionary of tensors that contain the current state information
-            needed to predict the next step, which includes the encoder output,
+            needed to predict the next step, which includes the encoder outputs,
             the source mask, and the decoder hidden state and context. Each of these
             tensors has shape ``(group_size, *)``, where ``*`` can be any other number
             of dimensions.
@@ -164,7 +164,7 @@ class SimpleSeq2Seq(Model):
             A tuple of ``(log_probabilities, updated_state)``, where ``log_probabilities``
             is a tensor of shape ``(group_size, num_classes)`` containing the predicted
             log probability of each class for the next step, for each item in the group,
-            while ``updated_state`` is a dictionary of tensors containing the encoder output,
+            while ``updated_state`` is a dictionary of tensors containing the encoder outputs,
             source mask, and updated decoder hidden state and context.
 
         Notes
@@ -439,7 +439,7 @@ class SimpleSeq2Seq(Model):
                                 decoder_hidden_state: torch.LongTensor = None,
                                 encoder_outputs: torch.LongTensor = None,
                                 encoder_outputs_mask: torch.LongTensor = None) -> torch.Tensor:
-        """Apply attention over encoder output and decoder state."""
+        """Apply attention over encoder outputs and decoder state."""
         # Ensure mask is also a FloatTensor. Or else the multiplication within
         # attention will complain.
         # shape: (batch_size, max_input_sequence_length, encoder_output_dim)
@@ -461,7 +461,7 @@ class SimpleSeq2Seq(Model):
         """
         Compute loss.
 
-        Takes logits (unnormalized output from the decoder) of size (batch_size,
+        Takes logits (unnormalized outputs from the decoder) of size (batch_size,
         num_decoding_steps, num_classes), target indices of size (batch_size, num_decoding_steps+1)
         and corresponding masks of size (batch_size, num_decoding_steps+1) steps and computes cross
         entropy loss while taking the mask into account.

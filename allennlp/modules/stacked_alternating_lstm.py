@@ -22,7 +22,7 @@ class StackedAlternatingLstm(torch.nn.Module):
     input_size : int, required
         The dimension of the inputs to the LSTM.
     hidden_size : int, required
-        The dimension of the output of the LSTM.
+        The dimension of the outputs of the LSTM.
     num_layers : int, required
         The number of stacked LSTMs to use.
     recurrent_dropout_probability: float, optional (default = 0.0)
@@ -37,9 +37,9 @@ class StackedAlternatingLstm(torch.nn.Module):
     Returns
     -------
     output_accumulator : PackedSequence
-        The output of the interleaved LSTMs per timestep. A tensor of shape
+        The outputs of the interleaved LSTMs per timestep. A tensor of shape
         (batch_size, max_timesteps, hidden_size) where for a given batch
-        element, all output past the sequence length for that batch are
+        element, all outputs past the sequence length for that batch are
         zero tensors.
     """
     def __init__(self,

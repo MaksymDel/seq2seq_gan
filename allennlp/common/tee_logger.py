@@ -1,5 +1,5 @@
 """
-A logger that maintains logs of both stdout and stderr when models are run.
+A logger that maintains logs of both stdout and stderr when generators_discriminators are run.
 """
 
 from typing import TextIO
@@ -21,7 +21,7 @@ def replace_cr_with_newline(message: str):
 
 class TeeLogger:
     """
-    This class is an attempt to maintain logs of both stdout and stderr for when models are run.
+    This class is an attempt to maintain logs of both stdout and stderr for when generators_discriminators are run.
     To use this class, at the beginning of your script insert these lines::
 
         sys.stdout = TeeLogger("stdout.log", sys.stdout)

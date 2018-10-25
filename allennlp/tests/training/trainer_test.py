@@ -302,8 +302,8 @@ class TestTrainer(AllenNlpTestCase):
         # To test:
         #   Create an iterator that sleeps for 2.5 second per epoch, so the total training
         #       time for one epoch is slightly greater then 2.5 seconds.
-        #   Run for 6 epochs, keeping the last 2 models, models also kept every 5 seconds.
-        #   Check the resulting checkpoints.  Should then have models at epochs
+        #   Run for 6 epochs, keeping the last 2 generators_discriminators, generators_discriminators also kept every 5 seconds.
+        #   Check the resulting checkpoints.  Should then have generators_discriminators at epochs
         #       2, 4, plus the last two at 5 and 6.
         class WaitingIterator(BasicIterator):
             # pylint: disable=arguments-differ
@@ -352,7 +352,7 @@ class TestTrainer(AllenNlpTestCase):
 
         trainer.train()
 
-        # Now check the serialized files for models saved during the epoch.
+        # Now check the serialized files for generators_discriminators saved during the epoch.
         prefix = 'model_state_epoch_*'
         file_names = sorted(glob.glob(os.path.join(self.TEST_DIR, prefix)))
         epochs = [re.search(r"_([0-9\.\-]+)\.th", fname).group(1)

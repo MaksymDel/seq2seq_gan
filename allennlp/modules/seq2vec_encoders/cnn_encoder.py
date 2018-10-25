@@ -18,7 +18,7 @@ class CnnEncoder(Seq2VecEncoder):
     The CNN has one convolution layer for each ngram filter size. Each convolution operation gives
     out a vector of size num_filters. The number of times a convolution layer will be used
     is ``num_tokens - ngram_size + 1``. The corresponding maxpooling layer aggregates all these
-    output from the convolution layer and output the max.
+    outputs from the convolution layer and outputs the max.
 
     This operation is repeated for every ngram size passed, and consequently the dimensionality of
     the output after maxpooling is ``len(ngram_filter_sizes) * num_filters``.  This then gets

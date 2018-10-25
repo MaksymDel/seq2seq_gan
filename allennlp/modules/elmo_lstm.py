@@ -37,7 +37,7 @@ class ElmoLstm(_EncoderBase):
     input_size : ``int``, required
         The dimension of the inputs to the LSTM.
     hidden_size : ``int``, required
-        The dimension of the output of the LSTM.
+        The dimension of the outputs of the LSTM.
     cell_size : ``int``, required.
         The dimension of the memory cell of the
         :class:`~allennlp.modules.lstm_cell_with_projection.LstmCellWithProjection`.

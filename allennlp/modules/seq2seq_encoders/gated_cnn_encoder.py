@@ -66,7 +66,7 @@ class ResidualBlock(torch.nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # pylint: disable=arguments-differ
         # x = (batch_size, dim, timesteps)
-        # output: (batch_size, dim, timesteps) = f(x) + x
+        # outputs: (batch_size, dim, timesteps) = f(x) + x
         out = x
         timesteps = x.size(2)
         for k, convolution in enumerate(self._convolutions):
@@ -172,10 +172,10 @@ class GatedCnnEncoder(Seq2SeqEncoder):
         mask_for_fill = (1 - mask).unsqueeze(1).byte()
 
         if self._return_all_layers:
-            # output will be [[all forward layers], [all backward layers]]
+            # outputs will be [[all forward layers], [all backward layers]]
             layer_outputs: List[List[torch.Tensor]] = [[], []]
         else:
-            # output will be [forward final layer, backward final layer]
+            # outputs will be [forward final layer, backward final layer]
             outputs: List[torch.Tensor] = []
 
         for k, blocks in enumerate([self._forward_residual_blocks,

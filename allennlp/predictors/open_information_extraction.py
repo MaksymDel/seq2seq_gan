@@ -34,7 +34,7 @@ def join_mwp(tags: List[str]) -> List[str]:
 
 def make_oie_string(tokens: List[Token], tags: List[str]) -> str:
     """
-    Converts a list of model output (i.e., a list of lists of bio tags, each
+    Converts a list of model outputs (i.e., a list of lists of bio tags, each
     pertaining to a single word), returns an inline bracket representation of
     the prediction.
     """
@@ -173,7 +173,7 @@ def sanitize_label(label: str) -> str:
 @Predictor.register('open-information-extraction')
 class OpenIePredictor(Predictor):
     """
-    Predictor for the :class: `models.SemanticRolelabeler` model (in its Open Information variant).
+    Predictor for the :class: `generators_discriminators.SemanticRolelabeler` model (in its Open Information variant).
     Used by online demo and for prediction on an input file using command line.
     """
     def __init__(self,

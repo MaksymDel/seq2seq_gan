@@ -43,11 +43,11 @@ class _EncoderBase(torch.nn.Module):
         tuple of tensors or a tensor.
 
         As all of our Seq2xxxEncoders have different return types, we return `sorted`
-        output from the module, which is called directly. Additionally, we return the
+        outputs from the module, which is called directly. Additionally, we return the
         indices into the batch dimension required to restore the tensor to it's correct,
         unsorted order and the number of valid batch elements (i.e the number of elements
         in the batch which are not completely masked). This un-sorting and re-padding
-        of the module output is left to the subclasses because their output have different
+        of the module outputs is left to the subclasses because their outputs have different
         types and handling them smoothly here is difficult.
 
         Parameters
@@ -81,7 +81,7 @@ class _EncoderBase(torch.nn.Module):
             the case of a GRU, or a tuple of tensors, such as those required for an LSTM.
         restoration_indices : ``torch.LongTensor``
             A tensor of shape ``(batch_size,)``, describing the re-indexing required to transform
-            the output back to their original batch order.
+            the outputs back to their original batch order.
         """
         # In some circumstances you may have sequences of zero length. ``pack_padded_sequence``
         # requires all sequence lengths to be > 0, so remove sequences of zero length before

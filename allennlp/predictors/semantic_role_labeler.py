@@ -12,7 +12,7 @@ from allennlp.predictors.predictor import Predictor
 @Predictor.register("semantic-role-labeling")
 class SemanticRoleLabelerPredictor(Predictor):
     """
-    Predictor for the :class:`~allennlp.models.bidaf.SemanticRoleLabeler` model.
+    Predictor for the :class:`~allennlp.generators_discriminators.bidaf.SemanticRoleLabeler` model.
     """
     def __init__(self, model: Model, dataset_reader: DatasetReader) -> None:
         super().__init__(model, dataset_reader)
@@ -73,7 +73,7 @@ class SemanticRoleLabelerPredictor(Predictor):
 
     def _sentence_to_srl_instances(self, json_dict: JsonDict) -> List[Instance]:
         """
-        The SRL model has a slightly different API from other models, as the model is run
+        The SRL model has a slightly different API from other generators_discriminators, as the model is run
         forward for every verb in the sentence. This means that for a single sentence, we need
         to generate a ``List[Instance]``, where the length of this list corresponds to the number
         of verbs in the sentence. Additionally, all of these verbs share the same return dictionary
