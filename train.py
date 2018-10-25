@@ -1,6 +1,5 @@
 import argparse
 import itertools
-
 from allennlp.data.dataset_readers import Seq2SeqDatasetReader
 from allennlp.data.iterators import BasicIterator
 from allennlp.data.token_indexers import SingleIdTokenIndexer
@@ -11,13 +10,13 @@ from build_modules import build_modules
 from utils_data import *
 from utils_nn import *
 
-
 torch.manual_seed(1)
 
 ###### Hyper parameters ######
 parser = argparse.ArgumentParser()
 parser.add_argument('--epoch', type=int, default=0, help='starting epoch')
 parser.add_argument('--n_epochs', type=int, default=200, help='number of epochs of training')
+
 parser.add_argument('--batch_size', type=int, default=256, help='size of the batches')
 parser.add_argument('--print_every', type=int, default=100, help='print frequency in batches')
 parser.add_argument('--train_data', type=str, default='toy_data/train.txt', help='root directory of the train dataset')
@@ -37,6 +36,7 @@ parser.add_argument('--bidirectional', type=bool, default=True,
 
 # parser.add_argument('--n_cpu', type=int, default=8, help='number of cpu threads to use during batch generation')
 opt = parser.parse_args()
+print('Hyperparams:')
 print(opt)
 ###################################
 
