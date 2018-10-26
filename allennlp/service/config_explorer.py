@@ -1,5 +1,5 @@
 """
-This is a tiny webapp for generating configuration stubs for your generators_discriminators.
+This is a tiny webapp for generating configuration stubs for your models.
 It's very hacky and very experimental, so don't rely on it for anything important.
 
 ```

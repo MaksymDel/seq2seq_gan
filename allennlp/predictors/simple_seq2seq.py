@@ -7,7 +7,7 @@ from allennlp.predictors.predictor import Predictor
 @Predictor.register('simple_seq2seq')
 class SimpleSeq2SeqPredictor(Predictor):
     """
-    Predictor for the :class:`~allennlp.generators_discriminators.encoder_decoder.simple_seq2seq` model.
+    Predictor for the :class:`~allennlp.models.encoder_decoder.simple_seq2seq` model.
     """
 
     def predict(self, source: str) -> JsonDict:

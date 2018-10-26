@@ -30,11 +30,11 @@ class Model(torch.nn.Module, Registrable):
     This abstract class represents a model to be trained. Rather than relying completely
     on the Pytorch Module, we modify the output spec of ``forward`` to be a dictionary.
 
-    Models built using this API are still compatible with other pytorch generators_discriminators and can
-    be used naturally as modules within other generators_discriminators - outputs are dictionaries, which
+    Models built using this API are still compatible with other pytorch models and can
+    be used naturally as modules within other models - outputs are dictionaries, which
     can be unpacked and passed into other layers. One caveat to this is that if you
     wish to use an AllenNLP model inside a Container (such as nn.Sequential), you must
-    interleave the generators_discriminators with a wrapper module which unpacks the dictionary into
+    interleave the models with a wrapper module which unpacks the dictionary into
     a list of tensors.
 
     In order for your model to be trained using the :class:`~allennlp.training.Trainer`
@@ -144,7 +144,7 @@ class Model(torch.nn.Module, Registrable):
 
         Returns
         -------
-        A list of the generators_discriminators output for each instance.
+        A list of the models output for each instance.
         """
         batch_size = len(instances)
         with torch.no_grad():

@@ -1,5 +1,5 @@
 """
-Tools for programmatically generating config files for AllenNLP generators_discriminators.
+Tools for programmatically generating config files for AllenNLP models.
 """
 # pylint: disable=protected-access,too-many-return-statements
 

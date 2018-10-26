@@ -5,7 +5,7 @@ states, and have some kind of supervision signal that tells you which end states
 transition sequences, are "good".
 
 Typical seq2seq decoding, where you have a fixed vocabulary and no constraints on your output, can
-be done much more efficiently than we do in this code.  This is intended for structured generators_discriminators that
+be done much more efficiently than we do in this code.  This is intended for structured models that
 have constraints on their outputs.
 
 The key abstractions in this code are the following:
@@ -13,7 +13,7 @@ The key abstractions in this code are the following:
     - ``State`` represents the current state of decoding, containing a list of all of the actions
       taken so far, and a current score for the state.  It also has methods around determining
       whether the state is "finished" and for combining states for batched computation.
-    - ``TransitionFunction`` is a ``torch.nn.Module`` that generators_discriminators the transition function between
+    - ``TransitionFunction`` is a ``torch.nn.Module`` that models the transition function between
       states.  Its main method is ``take_step``, which generates a ranked list of next states given
       a current state.
     - ``DecoderTrainer`` is an algorithm for training the transition function with some kind of

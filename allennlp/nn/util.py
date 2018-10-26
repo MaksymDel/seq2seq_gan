@@ -555,7 +555,7 @@ def sequence_cross_entropy_with_logits(logits: torch.FloatTensor,
     some user provided weights. Note that the weighting here is not the same as
     in the :func:`torch.nn.CrossEntropyLoss()` criterion, which is weighting
     classes; here we are weighting the loss contribution from particular elements
-    in the sequence. This allows loss computations for generators_discriminators which use padding.
+    in the sequence. This allows loss computations for models which use padding.
 
     Parameters
     ----------
@@ -875,7 +875,7 @@ def get_combined_dim(combination: str, tensor_dims: List[int]) -> int:
     """
     For use with :func:`combine_tensors`.  This function computes the resultant dimension when
     calling ``combine_tensors(combination, tensors)``, when the tensor dimension is known.  This is
-    necessary for knowing the sizes of weight matrices when building generators_discriminators that use
+    necessary for knowing the sizes of weight matrices when building models that use
     ``combine_tensors``.
 
     Parameters
@@ -1001,7 +1001,7 @@ def batched_index_select(target: torch.Tensor,
 
     An example use case of this function is looking up the start and end indices of spans in a
     sequence tensor. This is used in the
-    :class:`~allennlp.generators_discriminators.coreference_resolution.CoreferenceResolver`. Model to select
+    :class:`~allennlp.models.coreference_resolution.CoreferenceResolver`. Model to select
     contextual word representations corresponding to the start and end indices of mentions. The key
     reason this can't be done with basic torch functions is that we want to be able to use look-up
     tensors with an arbitrary number of dimensions (for example, in the coref model, we don't know

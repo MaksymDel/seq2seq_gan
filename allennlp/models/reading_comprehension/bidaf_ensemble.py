@@ -15,7 +15,7 @@ from allennlp.training.metrics import SquadEmAndF1
 @Model.register("bidaf-ensemble")
 class BidafEnsemble(Ensemble):
     """
-    This class ensembles the output from multiple BiDAF generators_discriminators.
+    This class ensembles the output from multiple BiDAF models.
 
     It combines results from the submodels by averaging the start and end span probabilities.
     """

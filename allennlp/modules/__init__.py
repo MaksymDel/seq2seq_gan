@@ -2,7 +2,7 @@
 Custom PyTorch
 `Module <http://pytorch.org/docs/master/nn.html#torch.nn.Module>`_ s
 that are used as components in AllenNLP
-:class:`~allennlp.generators_discriminators.model.Model` s.
+:class:`~allennlp.models.model.Model` s.
 """
 
 from allennlp.modules.conditional_random_field import ConditionalRandomField

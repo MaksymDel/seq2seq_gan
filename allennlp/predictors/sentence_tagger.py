@@ -12,9 +12,9 @@ class SentenceTaggerPredictor(Predictor):
     """
     Predictor for any model that takes in a sentence and returns
     a single set of tags for it.  In particular, it can be used with
-    the :class:`~allennlp.generators_discriminators.crf_tagger.CrfTagger` model
+    the :class:`~allennlp.models.crf_tagger.CrfTagger` model
     and also
-    the :class:`~allennlp.generators_discriminators.simple_tagger.SimpleTagger` model.
+    the :class:`~allennlp.models.simple_tagger.SimpleTagger` model.
     """
     def __init__(self, model: Model, dataset_reader: DatasetReader) -> None:
         super().__init__(model, dataset_reader)

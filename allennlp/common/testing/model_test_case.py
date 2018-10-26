@@ -15,7 +15,7 @@ from allennlp.models import Model, load_archive
 class ModelTestCase(AllenNlpTestCase):
     """
     A subclass of :class:`~allennlp.common.testing.test_case.AllenNlpTestCase`
-    with added methods for testing :class:`~allennlp.generators_discriminators.model.Model` subclasses.
+    with added methods for testing :class:`~allennlp.models.model.Model` subclasses.
     """
     def set_up_model(self, param_file, dataset_file):
         # pylint: disable=attribute-defined-outside-init
@@ -64,7 +64,7 @@ class ModelTestCase(AllenNlpTestCase):
             for all of the parameters in the model.  If you really want to ignore certain
             parameters when doing that check, you can pass their names here.  This is not
             recommended unless you're `really` sure you don't need to have non-zero gradients for
-            those parameters (e.g., some of the beam search / state machine generators_discriminators have
+            those parameters (e.g., some of the beam search / state machine models have
             infrequently-used parameters that are hard to force the model to use in a small test).
         overrides : ``str``, optional (default = "")
             A JSON string that we will use to override values in the input parameter file.
@@ -76,7 +76,7 @@ class ModelTestCase(AllenNlpTestCase):
         state_keys = model.state_dict().keys()
         loaded_state_keys = loaded_model.state_dict().keys()
         assert state_keys == loaded_state_keys
-        # First we make sure that the state dict (the parameters) are the same for both generators_discriminators.
+        # First we make sure that the state dict (the parameters) are the same for both models.
         for key in state_keys:
             assert_allclose(model.state_dict()[key].cpu().numpy(),
                             loaded_model.state_dict()[key].cpu().numpy(),

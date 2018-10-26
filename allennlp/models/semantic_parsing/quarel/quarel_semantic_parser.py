@@ -86,7 +86,7 @@ class QuarelSemanticParser(Model):
                  entity_bits_output: bool = True,
                  use_entities: bool = False,
                  denotation_only: bool = False,
-                 # Deprecated parameter to load older generators_discriminators
+                 # Deprecated parameter to load older models
                  entity_encoder: Seq2VecEncoder = None,  # pylint: disable=unused-argument
                  entity_similarity_mode: str = "dot_product",
                  rule_namespace: str = 'rule_labels') -> None:

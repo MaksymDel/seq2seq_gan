@@ -30,7 +30,7 @@ SEMPRE_GRAMMAR_PATH = os.path.join(SEMPRE_DIR, "grow.grammar")
 class WikiTablesParserPredictor(Predictor):
     """
     Wrapper for the
-    :class:`~allennlp.generators_discriminators.encoder_decoders.wikitables_semantic_parser.WikiTablesSemanticParser`
+    :class:`~allennlp.models.encoder_decoders.wikitables_semantic_parser.WikiTablesSemanticParser`
     model.
     """
 

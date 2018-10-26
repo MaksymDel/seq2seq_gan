@@ -8,7 +8,7 @@ from allennlp.predictors.predictor import Predictor
 @Predictor.register('textual-entailment')
 class DecomposableAttentionPredictor(Predictor):
     """
-    Predictor for the :class:`~allennlp.generators_discriminators.bidaf.DecomposableAttention` model.
+    Predictor for the :class:`~allennlp.models.bidaf.DecomposableAttention` model.
     """
 
     def predict(self, premise: str, hypothesis: str) -> JsonDict:

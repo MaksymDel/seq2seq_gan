@@ -171,7 +171,7 @@ class WikiTablesErmSemanticParser(WikiTablesSemanticParser):
         for name, weights in archived_parameters.items():
             if name in model_parameters:
                 if name == question_embedder_weight:
-                    # The shapes of embedding weights will most likely differ between the two generators_discriminators
+                    # The shapes of embedding weights will most likely differ between the two models
                     # because the vocabularies will most likely be different. We will get a mapping
                     # of indices from this model's token indices to the archived model's and copy
                     # the tensor accordingly.

@@ -117,7 +117,7 @@ class TestCustomHighwayLSTM(AllenNlpTestCase):
             bias_index += bias.nelement()
 
         baseline_input = torch.randn(batch_size, timesteps, input_size, requires_grad=True).cuda()
-        # Clone variable so different generators_discriminators are
+        # Clone variable so different models are
         # completely separate in the graph.
         kernel_version_input = baseline_input.clone()
 

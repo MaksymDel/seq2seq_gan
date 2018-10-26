@@ -188,7 +188,7 @@ class SpanBasedF1Measure(Metric):
         """
         The official CONLL 2012 evaluation script for SRL treats continued spans (i.e spans which
         have a `C-` prepended to another valid tag) as part of the span that they are continuing.
-        This is basically a massive hack to allow SRL generators_discriminators which produce a linear sequence of
+        This is basically a massive hack to allow SRL models which produce a linear sequence of
         predictions to do something close to structured prediction. However, this means that to
         compute the metric, these continutation spans need to be merged into the span to which
         they refer. The way this is done is to simply consider the span for the continued argument

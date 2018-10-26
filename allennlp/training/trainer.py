@@ -1,6 +1,6 @@
 """
 A :class:`~allennlp.training.trainer.Trainer` is responsible for training a
-:class:`~allennlp.generators_discriminators.model.Model`.
+:class:`~allennlp.models.model.Model`.
 
 Typically you might create a configuration file specifying the model and
 training parameters and then use :mod:`~allennlp.commands.train`
@@ -20,12 +20,12 @@ from typing import Dict, Optional, List, Tuple, Union, Iterable, Any, Set
 import torch
 import torch.optim.lr_scheduler
 from torch.nn.parallel import replicate, parallel_apply
-from torch.nn.parallel.scatter_gather import scatter_kwargs, gather
+from torch.nn.parallel.scatter_gather import gather
 from tensorboardX import SummaryWriter
 
 from allennlp.common import Params, Registrable
 from allennlp.common.checks import ConfigurationError
-from allennlp.common.util import peak_memory_mb, gpu_memory_mb, dump_metrics
+from allennlp.common.util import dump_metrics, gpu_memory_mb, parse_cuda_device, peak_memory_mb, scatter_kwargs
 from allennlp.common.tqdm import Tqdm
 from allennlp.data.instance import Instance
 from allennlp.data.iterators.data_iterator import DataIterator
@@ -222,13 +222,13 @@ class Trainer(Registrable):
             A value of None or -1 means all checkpoints will be kept.
         keep_serialized_model_every_num_seconds : ``int``, optional (default=None)
             If num_serialized_models_to_keep is not None, then occasionally it's useful to
-            save generators_discriminators at a given interval in addition to the last num_serialized_models_to_keep.
+            save models at a given interval in addition to the last num_serialized_models_to_keep.
             To do so, specify keep_serialized_model_every_num_seconds as the number of seconds
             between permanently saved checkpoints.  Note that this option is only used if
             num_serialized_models_to_keep is not None, otherwise all checkpoints are kept.
         model_save_interval : ``float``, optional (default=None)
-            If provided, then serialize generators_discriminators every ``model_save_interval``
-            seconds within single epochs.  In all cases, generators_discriminators are also saved
+            If provided, then serialize models every ``model_save_interval``
+            seconds within single epochs.  In all cases, models are also saved
             at the end of every epoch if ``serialization_dir`` is provided.
         cuda_device : ``int``, optional (default = -1)
             An integer specifying the CUDA device to use. If -1, the CPU is used.
@@ -408,6 +408,7 @@ class Trainer(Registrable):
         interface.
         """
         inputs, module_kwargs = scatter_kwargs((), batch, self._cuda_devices, 0)
+
         used_device_ids = self._cuda_devices[:len(inputs)]
         replicas = replicate(self.model, used_device_ids)
         outputs = parallel_apply(replicas, inputs, module_kwargs, used_device_ids)
@@ -506,7 +507,7 @@ class Trainer(Registrable):
             if self._log_histograms_this_batch:
                 # get the magnitude of parameter updates for logging
                 # We need a copy of current parameters to compute magnitude of updates,
-                # and copy them to CPU so large generators_discriminators won't go OOM on the GPU.
+                # and copy them to CPU so large models won't go OOM on the GPU.
                 param_updates = {name: param.detach().cpu().clone()
                                  for name, param in self.model.named_parameters()}
                 self.optimizer.step()
@@ -964,7 +965,7 @@ class Trainer(Registrable):
         model_path, training_state_path = latest_checkpoint
 
         # Load the parameters onto CPU, then transfer to GPU.
-        # This avoids potential OOM on GPU for large generators_discriminators that
+        # This avoids potential OOM on GPU for large models that
         # load parameters onto GPU then make a new GPU copy into the parameter
         # buffer. The GPU transfer happens implicitly in load_state_dict.
         model_state = torch.load(model_path, map_location=util.device_mapping(-1))
@@ -1013,13 +1014,11 @@ class Trainer(Registrable):
         validation_metric = params.pop("validation_metric", "-loss")
         shuffle = params.pop_bool("shuffle", True)
         num_epochs = params.pop_int("num_epochs", 20)
-        cuda_device = params.pop_int("cuda_device", -1)
+        cuda_device = parse_cuda_device(params.pop("cuda_device", -1))
         grad_norm = params.pop_float("grad_norm", None)
         grad_clipping = params.pop_float("grad_clipping", None)
         lr_scheduler_params = params.pop("learning_rate_scheduler", None)
 
-        if cuda_device >= 0:
-            model = model.cuda(cuda_device)
         parameters = [[n, p] for n, p in model.named_parameters() if p.requires_grad]
         optimizer = Optimizer.from_params(parameters, params.pop("optimizer"))
 

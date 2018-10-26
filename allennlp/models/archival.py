@@ -1,5 +1,5 @@
 """
-Helper functions for archiving generators_discriminators and restoring archived generators_discriminators.
+Helper functions for archiving models and restoring archived models.
 """
 
 from typing import NamedTuple, Dict, Any

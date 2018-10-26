@@ -25,7 +25,7 @@ def _make_bos_eos(
 class ELMoCharacterMapper:
     """
     Maps individual tokens to sequences of character ids, compatible with ELMo.
-    To be consistent with previously trained generators_discriminators, we include it here as special of existing
+    To be consistent with previously trained models, we include it here as special of existing
     character indexers.
     """
     max_word_length = 50

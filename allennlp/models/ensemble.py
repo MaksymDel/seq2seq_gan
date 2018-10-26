@@ -12,7 +12,7 @@ class Ensemble(Model):
     An ensemble runs multiple instances of a model and selects an answer from the subresults via some
     ensembling strategy.
 
-    Ensembles differ from most generators_discriminators in that they do not have a vocabulary or weights of their own
+    Ensembles differ from most models in that they do not have a vocabulary or weights of their own
     (instead they rely on the vocabulary and weights from submodels).  Instead, the submodels are trained
     independently and the ensemble is created from the result.
     """

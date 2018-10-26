@@ -14,7 +14,7 @@ from torch.nn.modules import Linear
 #Model.register("seq2prob")
 class Seq2Prob(Model):
     """
-    Converts sequence to probability
+    Predicts the probability of batch being real
 
     Parameters
     ----------

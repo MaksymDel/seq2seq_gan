@@ -6,7 +6,7 @@ from allennlp.common.registrable import Registrable
 
 class SpanExtractor(torch.nn.Module, Registrable):
     """
-    Many NLP generators_discriminators deal with representations of spans inside a sentence.
+    Many NLP models deal with representations of spans inside a sentence.
     SpanExtractors define methods for extracting and representing spans
     from a sentence.
 

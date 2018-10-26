@@ -7,7 +7,7 @@ from allennlp.predictors.predictor import Predictor
 @Predictor.register('machine-comprehension')
 class BidafPredictor(Predictor):
     """
-    Predictor for the :class:`~allennlp.generators_discriminators.bidaf.BidirectionalAttentionFlow` model.
+    Predictor for the :class:`~allennlp.models.bidaf.BidirectionalAttentionFlow` model.
     """
 
     def predict(self, question: str, passage: str) -> JsonDict:

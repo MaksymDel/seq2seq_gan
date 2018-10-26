@@ -26,7 +26,7 @@ class SimpleSeq2Seq(Model):
     uses the encoded representations to decode another sequence.  You can use this as the basis for
     a neural machine translation system, an abstractive summarization system, or any other common
     seq2seq problem.  The model here is simple, but should be a decent starting place for
-    implementing recent generators_discriminators for these tasks.
+    implementing recent models for these tasks.
 
     Parameters
     ----------

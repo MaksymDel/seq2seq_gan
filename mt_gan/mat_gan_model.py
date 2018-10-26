@@ -16,6 +16,9 @@ import logging
 
 from allennlp.common.checks import ConfigurationError
 from allennlp.common.params import Params
+from allennlp.nn.util import get_text_field_mask
+
+from mt_gan.losses import *
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -86,6 +89,9 @@ class MtGan(Model):
         self._num_classes_A = vocab.get_vocab_size(namespace=vocab_namespace_A)
         self._num_classes_B = vocab.get_vocab_size(namespace=vocab_namespace_B)
 
+        self._loss_calculator_cycle = CrossEntropyReconstructionLoss()
+        self._loss_calculator_generator = InvertedProbabilityGeneratorLoss()
+        self._loss_calculator_discriminator = ClassicDiscriminatorLoss()
 
         print(discriminator_B)
     @overrides
@@ -98,10 +104,10 @@ class MtGan(Model):
 
         Parameters
         ----------
-        source_tokens : ``Dict[str, torch.LongTensor]``
+        batch_real_A : ``Dict[str, torch.LongTensor]``
            The output of `TextField.as_array()` applied on the source `TextField`. This will be
            passed through a `TextFieldEmbedder` and then through an encoder.
-        target_tokens : ``Dict[str, torch.LongTensor]``, optional (default = None)
+        batch_real_B : ``Dict[str, torch.LongTensor]``, optional (default = None)
            Output of `Textfield.as_array()` applied on target `TextField`. We assume that the
            target tokens are also represented as a `TextField`.
 
@@ -116,14 +122,52 @@ class MtGan(Model):
         batch_real_A["onehots"] = self._ids_to_onehot(batch_real_A["ids"], self._num_classes_A)
         batch_real_B["onehots"] = self._ids_to_onehot(batch_real_B["ids"], self._num_classes_B)
 
-        # COMPUTE GRADIENTS FOR GENERATORS
+        # GENERATORS
+        # TODO: freeze discriminators!
+        # -------------------------------------------------------------------------------------------------------------
+        # Loss generator A -> B
         batch_fake_B = self._generator_A_to_B.forward(source_batch=batch_real_A)
-        batch_fale_B_probs = self._discriminator_B(batch=batch_fake_B)
-        
+        probs_batch_fake_B = self._discriminator_B(batch=batch_fake_B)  # probs of fake examples being real
+        loss_generator_A_to_B = self._loss_calculator_generator(probs_fake_batch_being_real=probs_batch_fake_B)
 
+        # Cycle loss A -> B -> A
+        batch_reconstructed_A = self._generator_B_to_A.forward(source_batch=batch_fake_B, target_batch=batch_real_A)
+        loss_cycle_ABA = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed_A,
+                                                     batch_original=batch_real_A)
 
+        # Loss generator B -> A
+        batch_fake_A = self._generator_B_to_A(batch_real_B)
+        probs_batch_fake_A = self._discriminator_A.forward(batch=batch_fake_A)
+        loss_generator_B_to_A = self._loss_calculator_generator(probs_fake_batch_being_real=probs_batch_fake_A)
 
-        return 1
+        # Cycle loss B -> A -> B
+        batch_reconstructed_B = self._generator_A_to_B.forward(source_batch=batch_fake_A, target_batch=batch_real_B)
+        loss_cycle_BAB = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed_B,
+                                                     batch_original=batch_real_B)
+        # -------------------------------------------------------------------------------------------------------------
+
+        # DISCRIMINATORS
+        # -------------------------------------------------------------------------------------------------------------
+        # Fake and real losses for Discriminator A
+        probs_batch_real_A = self._discriminator_A(batch=batch_real_A)
+        loss_discriminator_A_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real_A,
+                                                                        batch_is_real=True)
+        loss_discriminator_A_fake = self._loss_calculator_discriminator(
+            probs_batch_being_real=probs_batch_fake_A.detach(), batch_is_real=False)  # TODO: experience reply
+
+        # Fake and real losses for Discriminator B
+        probs_batch_real_B = self._discriminator_B(batch=batch_real_B)
+        loss_discriminator_B_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real_B,
+                                                                        batch_is_real=True)
+        loss_discriminator_B_fake = self._loss_calculator_discriminator(
+            probs_batch_being_real=probs_batch_fake_B.detach(), batch_is_real=False)  # TODO: experience reply
+        # -------------------------------------------------------------------------------------------------------------
+
+        total_loss = loss_generator_A_to_B + loss_cycle_ABA + loss_generator_B_to_A + loss_cycle_BAB + \
+                     loss_discriminator_A_real + loss_discriminator_A_fake + \
+                     loss_discriminator_B_real + loss_discriminator_B_fake
+
+        return {"loss": total_loss}
 
     @overrides
     def decode(self, output_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:

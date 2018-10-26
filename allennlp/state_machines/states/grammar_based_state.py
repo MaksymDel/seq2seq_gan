@@ -12,7 +12,7 @@ from allennlp.state_machines.states.state import State
 # the note in `state_machines.state.py` for a little more detail.
 class GrammarBasedState(State['GrammarBasedState']):
     """
-    A generic State that's suitable for most generators_discriminators that do grammar-based decoding.  We keep around
+    A generic State that's suitable for most models that do grammar-based decoding.  We keep around
     a `group` of states, and each element in the group has a few things: a batch index, an action
     history, a score, an ``RnnStatelet``, and a ``GrammarStatelet``.  We additionally have some
     information that's independent of any particular group element: a list of all possible actions
