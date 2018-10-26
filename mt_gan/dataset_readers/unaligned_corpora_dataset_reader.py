@@ -83,16 +83,18 @@ class UnilignedCorporaDatasetReader(DatasetReader):
         if string_A is None and string_B is None:
             raise ValueError("You should provide a batch at least in one domain")
 
+        field_name_A = "batch_real_A"
+        field_name_B = "batch_real_B"
         if string_A is not None and string_B is not None:
             field_A = self.string_to_field(string_A, self._source_token_indexers)
             field_B = self.string_to_field(string_B, self._target_token_indexers)
-            return Instance({"batch_A": field_A, "batch_B": field_B})
+            return Instance({field_name_A: field_A, field_name_B: field_B})
         elif string_A is not None:
             field_A = self.string_to_field(string_A, self._source_token_indexers)
-            return Instance({'batch_A': field_A})
+            return Instance({field_name_A: field_A})
         elif string_B is not None:
             field_B = self.string_to_field(string_B, self._target_token_indexers)
-            return Instance({'batch_B': field_B})
+            return Instance({field_name_B: field_B})
 
     def string_to_field(self, string, token_indexers):
         tokenized_string = self._tokenizer_A.tokenize(string)

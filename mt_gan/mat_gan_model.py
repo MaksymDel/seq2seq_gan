@@ -9,6 +9,7 @@ from allennlp.modules.token_embedders import Embedding
 
 from mt_gan.generators_discriminators import Seq2Prob, Rnn2Rnn
 
+import typing
 from typing import TypeVar, Dict
 import inspect
 import logging
@@ -71,21 +72,26 @@ class MtGan(Model):
                  generator_A_to_B: Rnn2Rnn,
                  generator_B_to_A: Rnn2Rnn,
                  discriminator_A: Seq2Prob,
-                 discriminator_B: Seq2Prob) -> None:
+                 discriminator_B: Seq2Prob,
+                 vocab_namespace_A: str,
+                 vocab_namespace_B: str) -> None:
         super(MtGan, self).__init__(vocab)
-
-        self._vocab = vocab
 
         self._generator_A_to_B = generator_A_to_B
         self._generator_B_to_A = generator_B_to_A
         self._discriminator_A = discriminator_A
         self._discriminator_B = discriminator_B
 
+        self._vocab = vocab
+        self._num_classes_A = vocab.get_vocab_size(namespace=vocab_namespace_A)
+        self._num_classes_B = vocab.get_vocab_size(namespace=vocab_namespace_B)
+
+
         print(discriminator_B)
     @overrides
     def forward(self,  # type: ignore
-                batch_A: Dict[str, torch.LongTensor] = None,
-                batch_B: Dict[str, torch.LongTensor] = None) -> Dict[str, torch.Tensor]:
+                batch_real_A: Dict[str, torch.LongTensor] = None,
+                batch_real_B: Dict[str, torch.LongTensor] = None) -> Dict[str, torch.Tensor]:
         # pylint: disable=arguments-differ
         """
         Make foward pass with decoder logic for producing the entire target sequence.
@@ -103,19 +109,19 @@ class MtGan(Model):
         -------
         Dict[str, torch.Tensor]
         """
-        print(batch_B)
-        if batch_A is None or batch_B is None:  # Test time!
+        if batch_real_A is None or batch_real_B is None:  # Test time!
             raise ValueError("Testing is not implemented yet")
 
-        # shape: (batch_size, max_seq_length)
-        token_ids_A = batch_A["ids"]
-        token_ids_B = batch_B["ids"]
+        # add tokens onehots to model inputs
+        batch_real_A["onehots"] = self._ids_to_onehot(batch_real_A["ids"], self._num_classes_A)
+        batch_real_B["onehots"] = self._ids_to_onehot(batch_real_B["ids"], self._num_classes_B)
 
-        tokens_onehotes_A = MtGan.ids_to_onehot(token_ids_A, self._num_classes_A)
-        tokens_onehotes_B = MtGan.ids_to_onehot(token_ids_B, self._num_classes_B)
+        # COMPUTE GRADIENTS FOR GENERATORS
+        batch_fake_B = self._generator_A_to_B.forward(source_batch=batch_real_A)
+        batch_fale_B_probs = self._discriminator_B(batch=batch_fake_B)
+        
 
-        ###### Generators ######
-        # self._generator_A_to_B
+
 
         return 1
 
@@ -218,7 +224,6 @@ class MtGan(Model):
         else:
             raise ConfigurationError(message="This generators model type is not supported")
 
-
         discriminators_params = params.pop("discriminators")
         if discriminators_params.pop("type") == "seq2prob":
             params_encoder_discriminators = discriminators_params.pop("encoder")
@@ -238,4 +243,6 @@ class MtGan(Model):
                    generator_A_to_B=generator_A_to_B,
                    generator_B_to_A=generator_B_to_A,
                    discriminator_A=discriminator_A,
-                   discriminator_B=discriminator_B)
+                   discriminator_B=discriminator_B,
+                   vocab_namespace_A=vocab_namespace_A,
+                   vocab_namespace_B=vocab_namespace_B)

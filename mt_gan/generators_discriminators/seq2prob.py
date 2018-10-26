@@ -11,7 +11,7 @@ from misc.utils_data import *
 from torch.nn import Sigmoid
 from torch.nn.modules import Linear
 
-Model.register("seq2prob")
+#Model.register("seq2prob")
 class Seq2Prob(Model):
     """
     Converts sequence to probability
@@ -45,7 +45,7 @@ class Seq2Prob(Model):
 
     @overrides
     def forward(self,  # type: ignore
-                source_tokens: Dict[str, torch.LongTensor]) -> torch.Tensor:
+                batch: Dict[str, torch.LongTensor]) -> torch.Tensor:
         # pylint: disable=arguments-differ
         """
         Make foward pass with decoder logic for producing the entire target sequence.
@@ -61,12 +61,12 @@ class Seq2Prob(Model):
         torch.Tensor
         """
         # shape: (batch_size, max_input_sequence_length, embedding_dim)
-        embedded_input = torch.matmul(source_tokens["onehots"].float(), self._embedding.weight)
+        embedded_input = torch.matmul(batch["onehots"].float(), self._embedding.weight)
 
         batch_size, _, _ = embedded_input.size()
 
         # shape: (batch_size, max_input_sequence_length)
-        source_mask = util.get_text_field_mask(source_tokens)
+        source_mask = util.get_text_field_mask(batch)
 
         # shape: (batch_size, encoder_output_dim)
         encoder_output = self._encoder(embedded_input, source_mask)
