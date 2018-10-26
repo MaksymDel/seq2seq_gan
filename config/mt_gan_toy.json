@@ -10,12 +10,12 @@
     // ============= GENERRATORS ARCHITECTURE =============
     "generators": {
       "type": "rnn2rnn",
-      "embedding_dim": 100,
+      "embedding_dim": 30,
       "max_decoding_steps": 15,
       "encoder": {
         "type": "lstm",
-        "input_size": 100,
-        "hidden_size": 200,
+        "input_size": 30,
+        "hidden_size": 30,
         "num_layers": 1,
         "bidirectional": true
       },
@@ -28,11 +28,11 @@
     // ============= DISCRIMINATORS ARCHITECTURE =============
     "discriminators": {
       "type": "seq2prob",
-      "embedding_dim": 100,
+      "embedding_dim": 30,
       "encoder": {
         "type": "lstm",
-        "input_size": 100,
-        "hidden_size": 200,
+        "input_size": 30,
+        "hidden_size": 30,
         "num_layers": 1,
         "bidirectional": true
       }
@@ -41,16 +41,16 @@
 
   "iterator": {
     "type": "basic",
-    "batch_size" : 128
+    "batch_size" : 3
     // "padding_noise": 0.0,
     //"sorting_keys": [["source_tokens", "num_tokens"]]
   },
 
   "trainer": {
-    "num_epochs": 200,
+    "num_epochs": 2,
     "patience": 10,
     "shuffle": false,
-    "cuda_device": 0,
+    "cuda_device": -1,
     "optimizer": {
       "type": "adam",
       "lr": 0.01

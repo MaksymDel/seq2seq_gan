@@ -98,8 +98,11 @@ class MtGan(Model):
         self._loss_calculator_discriminator = ClassicDiscriminatorLoss()
 
         # define metrics to print
-        self.metric_accuracy_cycle_ABA = metrics.CategoricalAccuracy()
-        self.metric_accuracy_cycle_BAB = metrics.CategoricalAccuracy()
+        self._metric_accuracy_cycle_ABA = metrics.CategoricalAccuracy()
+        self._metric_accuracy_cycle_BAB = metrics.CategoricalAccuracy()
+
+        self.metric_loss_cycle_ABA = metrics.Average()
+        self.metric_loss_cycle_BAB = metrics.Average()
 
         self.metric_loss_generator_A_to_B = metrics.Average()
         self.metric_loss_generator_B_to_A = metrics.Average()
@@ -139,7 +142,8 @@ class MtGan(Model):
         batch_real_B["onehots"] = self._ids_to_onehot(batch_real_B["ids"], self._num_classes_B)
 
         # GENERATORS
-        # TODO: freeze discriminators!
+        # Freeze discriminators first!
+        self._set_requires_grad([self._discriminator_A, self._discriminator_B], False)
         # -------------------------------------------------------------------------------------------------------------
         # Loss generator A -> B
         batch_fake_B = self._generator_A_to_B(source_batch=batch_real_A)
@@ -163,31 +167,39 @@ class MtGan(Model):
         # -------------------------------------------------------------------------------------------------------------
 
         # DISCRIMINATORS
+        # Unfreeze discriminators now!
+        self._set_requires_grad([self._discriminator_A, self._discriminator_B], True)
         # -------------------------------------------------------------------------------------------------------------
         # Fake and real losses for Discriminator A
         probs_batch_real_A = self._discriminator_A(batch=batch_real_A)
         loss_discriminator_A_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real_A,
                                                                         batch_is_real=True)
+
+        probs_batch_fake_A = self._discriminator_A(batch=self._detach_batch(batch_fake_A))  # TODO: experience reply
         loss_discriminator_A_fake = self._loss_calculator_discriminator(
-            probs_batch_being_real=probs_batch_fake_A.detach(), batch_is_real=False)  # TODO: experience reply
+            probs_batch_being_real=probs_batch_fake_A, batch_is_real=False)
 
         # Fake and real losses for Discriminator B
         probs_batch_real_B = self._discriminator_B(batch=batch_real_B)
         loss_discriminator_B_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real_B,
                                                                         batch_is_real=True)
+
+        probs_batch_fake_B = self._discriminator_A(batch=self._detach_batch(batch_fake_B))  # TODO: experience reply
         loss_discriminator_B_fake = self._loss_calculator_discriminator(
-            probs_batch_being_real=probs_batch_fake_B.detach(), batch_is_real=False)  # TODO: experience reply
+            probs_batch_being_real=probs_batch_fake_B, batch_is_real=False)
         # -------------------------------------------------------------------------------------------------------------
 
         # compute metrics
-        #print(batch_reconstructed_A["ids"].size(), batch_real_A["ids"].size())
-        #self.metric_accuracy_cycle_ABA(batch_reconstructed_A['onehots'].detach(),
+        #self._metric_accuracy_cycle_ABA(batch_reconstructed_A['onehots'].detach(),
         #                               batch_real_A["ids"],
         #                               get_text_field_mask(batch_real_A))
 
-        #self.metric_accuracy_cycle_BAB(batch_reconstructed_B['onehots'].detach(),
+        #self._metric_accuracy_cycle_BAB(batch_reconstructed_B['onehots'].detach(),
         #                               batch_real_B["ids"],
         #                               get_text_field_mask(batch_real_B))
+
+        self.metric_loss_cycle_ABA(loss_cycle_ABA.item())
+        self.metric_loss_cycle_BAB(loss_cycle_BAB.item())
 
         self.metric_loss_generator_A_to_B(loss_generator_A_to_B.item())
         self.metric_loss_generator_B_to_A(loss_generator_B_to_A.item())
@@ -203,10 +215,27 @@ class MtGan(Model):
 
         return {"loss": total_loss}
 
+    def _forward_discriminator(self, batch_real, batch_fake, discriminator):
+        probs_batch_real = discriminator(batch=batch_real)
+        loss_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real,
+                                                        batch_is_real=True)
+
+        probs_batch_fake = discriminator(batch=batch_fake)
+        loss_fake = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_fake,
+                                                        batch_is_real=False)
+
+        return loss_real, loss_fake
+
+
+
+
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
 
-        return {"acc_cycle_ABA": self.metric_accuracy_cycle_ABA.get_metric(reset),
-                "acc_cycle_BAB": self.metric_accuracy_cycle_BAB.get_metric(reset),
+        return {#"acc_cycle_ABA": self._metric_accuracy_cycle_ABA.get_metric(reset),
+                #"acc_cycle_BAB": self._metric_accuracy_cycle_BAB.get_metric(reset),
+
+                "loss_cycle_ABA": self.metric_loss_cycle_ABA.get_metric(reset),
+                "loss_cycle_BAB": self.metric_loss_cycle_BAB.get_metric(reset),
 
                 "loss_g_A_to_B": self.metric_loss_generator_A_to_B.get_metric(reset),
                 "loss_g_B_to_A": self.metric_loss_generator_B_to_A.get_metric(reset),
@@ -259,18 +288,22 @@ class MtGan(Model):
 
         return onehots
 
-    def _prepare_model_input(self, source_tokens_dict: Dict[str, torch.Tensor],
-                             target_tokens_dict: Dict[str, torch.Tensor] = None) -> Dict[str, Dict[str, torch.Tensor]]:
-        if 'loss' in source_tokens_dict.keys():
-            source_tokens_dict.pop('loss')
-        model_input = {'source_tokens': source_tokens_dict}
-        if target_tokens_dict:
-            if 'loss' in target_tokens_dict.keys():
-                target_tokens_dict.pop('loss')
-            model_input['target_tokens'] = target_tokens_dict
+    @staticmethod
+    def _set_requires_grad(nets, requires_grad=False):
+        """
+        Prevents network parameters from accumulating gradients
+        but keeps recording computational graph for the backward pass.
+        """
+        if not isinstance(nets, list):
+            nets = [nets]
+        for net in nets:
+            if net is not None:
+                for param in net.parameters():
+                    param.requires_grad = requires_grad
 
-        # TODO: move to GPU
-        return model_input
+    @staticmethod
+    def _detach_batch(batch):
+        return {"ids": batch["ids"], "onehots": batch["onehots"].detach()}
 
     @classmethod
     def from_params(cls, vocab: Vocabulary, params: Params) -> 'MtGan':  # type: ignore
