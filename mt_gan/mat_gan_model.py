@@ -6,6 +6,7 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.modules import Attention, Seq2SeqEncoder, Seq2VecEncoder
 from allennlp.models.model import Model
 from allennlp.modules.token_embedders import Embedding
+from allennlp.nn.util import get_text_field_mask
 
 from mt_gan.generators_discriminators import Seq2Prob, Rnn2Rnn
 
@@ -16,7 +17,7 @@ import logging
 
 from allennlp.common.checks import ConfigurationError
 from allennlp.common.params import Params
-from allennlp.nn.util import get_text_field_mask
+from allennlp.training import metrics
 
 from mt_gan.losses import *
 
@@ -80,18 +81,33 @@ class MtGan(Model):
                  vocab_namespace_B: str) -> None:
         super(MtGan, self).__init__(vocab)
 
+        # define players of min-max game
         self._generator_A_to_B = generator_A_to_B
         self._generator_B_to_A = generator_B_to_A
         self._discriminator_A = discriminator_A
         self._discriminator_B = discriminator_B
 
+        # define vocabulary
         self._vocab = vocab
         self._num_classes_A = vocab.get_vocab_size(namespace=vocab_namespace_A)
         self._num_classes_B = vocab.get_vocab_size(namespace=vocab_namespace_B)
 
+        # define loss calculators
         self._loss_calculator_cycle = CrossEntropyReconstructionLoss()
         self._loss_calculator_generator = InvertedProbabilityGeneratorLoss()
         self._loss_calculator_discriminator = ClassicDiscriminatorLoss()
+
+        # define metrics to print
+        self.metric_accuracy_cycle_ABA = metrics.CategoricalAccuracy()
+        self.metric_accuracy_cycle_BAB = metrics.CategoricalAccuracy()
+
+        self.metric_loss_generator_A_to_B = metrics.Average()
+        self.metric_loss_generator_B_to_A = metrics.Average()
+
+        self.metric_loss_discriminator_A_real = metrics.Average()
+        self.metric_loss_discriminator_A_fake = metrics.Average()
+        self.metric_loss_discriminator_B_real = metrics.Average()
+        self.metric_loss_discriminator_B_fake = metrics.Average()
 
         print(discriminator_B)
     @overrides
@@ -126,22 +142,22 @@ class MtGan(Model):
         # TODO: freeze discriminators!
         # -------------------------------------------------------------------------------------------------------------
         # Loss generator A -> B
-        batch_fake_B = self._generator_A_to_B.forward(source_batch=batch_real_A)
+        batch_fake_B = self._generator_A_to_B(source_batch=batch_real_A)
         probs_batch_fake_B = self._discriminator_B(batch=batch_fake_B)  # probs of fake examples being real
         loss_generator_A_to_B = self._loss_calculator_generator(probs_fake_batch_being_real=probs_batch_fake_B)
 
         # Cycle loss A -> B -> A
-        batch_reconstructed_A = self._generator_B_to_A.forward(source_batch=batch_fake_B, target_batch=batch_real_A)
+        batch_reconstructed_A = self._generator_B_to_A(source_batch=batch_fake_B, target_batch=batch_real_A)
         loss_cycle_ABA = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed_A,
                                                      batch_original=batch_real_A)
 
         # Loss generator B -> A
         batch_fake_A = self._generator_B_to_A(batch_real_B)
-        probs_batch_fake_A = self._discriminator_A.forward(batch=batch_fake_A)
+        probs_batch_fake_A = self._discriminator_A(batch=batch_fake_A)
         loss_generator_B_to_A = self._loss_calculator_generator(probs_fake_batch_being_real=probs_batch_fake_A)
 
         # Cycle loss B -> A -> B
-        batch_reconstructed_B = self._generator_A_to_B.forward(source_batch=batch_fake_A, target_batch=batch_real_B)
+        batch_reconstructed_B = self._generator_A_to_B(source_batch=batch_fake_A, target_batch=batch_real_B)
         loss_cycle_BAB = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed_B,
                                                      batch_original=batch_real_B)
         # -------------------------------------------------------------------------------------------------------------
@@ -163,11 +179,42 @@ class MtGan(Model):
             probs_batch_being_real=probs_batch_fake_B.detach(), batch_is_real=False)  # TODO: experience reply
         # -------------------------------------------------------------------------------------------------------------
 
+        # compute metrics
+        #print(batch_reconstructed_A["ids"].size(), batch_real_A["ids"].size())
+        #self.metric_accuracy_cycle_ABA(batch_reconstructed_A['onehots'].detach(),
+        #                               batch_real_A["ids"],
+        #                               get_text_field_mask(batch_real_A))
+
+        #self.metric_accuracy_cycle_BAB(batch_reconstructed_B['onehots'].detach(),
+        #                               batch_real_B["ids"],
+        #                               get_text_field_mask(batch_real_B))
+
+        self.metric_loss_generator_A_to_B(loss_generator_A_to_B.item())
+        self.metric_loss_generator_B_to_A(loss_generator_B_to_A.item())
+
+        self.metric_loss_discriminator_A_real(loss_discriminator_A_real.item())
+        self.metric_loss_discriminator_A_fake(loss_discriminator_A_fake.item())
+        self.metric_loss_discriminator_B_real(loss_discriminator_B_real.item())
+        self.metric_loss_discriminator_B_fake(loss_discriminator_B_fake.item())
+
         total_loss = loss_generator_A_to_B + loss_cycle_ABA + loss_generator_B_to_A + loss_cycle_BAB + \
                      loss_discriminator_A_real + loss_discriminator_A_fake + \
                      loss_discriminator_B_real + loss_discriminator_B_fake
 
         return {"loss": total_loss}
+
+    def get_metrics(self, reset: bool = False) -> Dict[str, float]:
+
+        return {"acc_cycle_ABA": self.metric_accuracy_cycle_ABA.get_metric(reset),
+                "acc_cycle_BAB": self.metric_accuracy_cycle_BAB.get_metric(reset),
+
+                "loss_g_A_to_B": self.metric_loss_generator_A_to_B.get_metric(reset),
+                "loss_g_B_to_A": self.metric_loss_generator_B_to_A.get_metric(reset),
+
+                "loss_d_A_real": self.metric_loss_discriminator_A_real.get_metric(reset),
+                "loss_d_A_fake": self.metric_loss_discriminator_A_fake.get_metric(reset),
+                "loss_d_B_real": self.metric_loss_discriminator_B_real.get_metric(reset),
+                "loss_d_B_fake": self.metric_loss_discriminator_B_fake.get_metric(reset)}
 
     @overrides
     def decode(self, output_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
