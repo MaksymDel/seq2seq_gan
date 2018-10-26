@@ -137,90 +137,84 @@ class MtGan(Model):
         if batch_real_A is None or batch_real_B is None:  # Test time!
             raise ValueError("Testing is not implemented yet")
 
-        # add tokens onehots to model inputs
+        # get a couple of real batches of un-parallel data
         batch_real_A["onehots"] = self._ids_to_onehot(batch_real_A["ids"], self._num_classes_A)
         batch_real_B["onehots"] = self._ids_to_onehot(batch_real_B["ids"], self._num_classes_B)
 
-        # GENERATORS
-        # Freeze discriminators first!
-        self._set_requires_grad([self._discriminator_A, self._discriminator_B], False)
-        # -------------------------------------------------------------------------------------------------------------
-        # Loss generator A -> B
-        batch_fake_B = self._generator_A_to_B(source_batch=batch_real_A)
-        probs_batch_fake_B = self._discriminator_B(batch=batch_fake_B)  # probs of fake examples being real
-        loss_generator_A_to_B = self._loss_calculator_generator(probs_fake_batch_being_real=probs_batch_fake_B)
-
-        # Cycle loss A -> B -> A
-        batch_reconstructed_A = self._generator_B_to_A(source_batch=batch_fake_B, target_batch=batch_real_A)
-        loss_cycle_ABA = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed_A,
-                                                     batch_original=batch_real_A)
-
-        # Loss generator B -> A
+        # translate real batches
         batch_fake_A = self._generator_B_to_A(batch_real_B)
-        probs_batch_fake_A = self._discriminator_A(batch=batch_fake_A)
-        loss_generator_B_to_A = self._loss_calculator_generator(probs_fake_batch_being_real=probs_batch_fake_A)
+        batch_fake_B = self._generator_A_to_B(batch_real_A)
 
+        # LOSSES FOR GENERATORS: freeze discriminators first!
+        self._set_requires_grad([self._discriminator_A, self._discriminator_B], False)
+
+        # Loss generator A -> B
+        loss_g_A_to_B = self._forward_generator(batch_fake_B, self._discriminator_B)
+        # Loss generator B -> A
+        loss_g_B_to_A = self._forward_generator(batch_fake_A, self._discriminator_A)
+        # Cycle loss A -> B -> A
+        loss_cycle_ABA = self._forward_cycle(batch_real_A, batch_fake_B, self._generator_B_to_A)
         # Cycle loss B -> A -> B
-        batch_reconstructed_B = self._generator_A_to_B(source_batch=batch_fake_A, target_batch=batch_real_B)
-        loss_cycle_BAB = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed_B,
-                                                     batch_original=batch_real_B)
-        # -------------------------------------------------------------------------------------------------------------
+        loss_cycle_BAB = self._forward_cycle(batch_real_B, batch_fake_A, self._generator_A_to_B)
 
-        # DISCRIMINATORS
-        # Unfreeze discriminators now!
+        # LOSSES FOR DISCRIMINATORS: unfreeze them now!
         self._set_requires_grad([self._discriminator_A, self._discriminator_B], True)
-        # -------------------------------------------------------------------------------------------------------------
+
         # Fake and real losses for Discriminator A
-        probs_batch_real_A = self._discriminator_A(batch=batch_real_A)
-        loss_discriminator_A_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real_A,
-                                                                        batch_is_real=True)
-
-        probs_batch_fake_A = self._discriminator_A(batch=self._detach_batch(batch_fake_A))  # TODO: experience reply
-        loss_discriminator_A_fake = self._loss_calculator_discriminator(
-            probs_batch_being_real=probs_batch_fake_A, batch_is_real=False)
-
+        loss_d_A_real, loss_d_A_fake = self._forward_discriminator(batch_real_A, batch_fake_A, self._discriminator_A)
         # Fake and real losses for Discriminator B
-        probs_batch_real_B = self._discriminator_B(batch=batch_real_B)
-        loss_discriminator_B_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real_B,
-                                                                        batch_is_real=True)
+        loss_d_B_real, loss_d_B_fake = self._forward_discriminator(batch_real_B, batch_fake_B, self._discriminator_B)
 
-        probs_batch_fake_B = self._discriminator_A(batch=self._detach_batch(batch_fake_B))  # TODO: experience reply
-        loss_discriminator_B_fake = self._loss_calculator_discriminator(
-            probs_batch_being_real=probs_batch_fake_B, batch_is_real=False)
+        # Compute total loss to return and minimize
+        total_loss = loss_g_A_to_B + loss_g_B_to_A + \
+                     loss_cycle_ABA + loss_cycle_BAB + \
+                     loss_d_A_real + loss_d_A_fake + \
+                     loss_d_B_real + loss_d_B_fake
+
         # -------------------------------------------------------------------------------------------------------------
-
         # compute metrics
-        #self._metric_accuracy_cycle_ABA(batch_reconstructed_A['onehots'].detach(),
+        # self._metric_accuracy_cycle_ABA(batch_reconstructed_A['onehots'].detach(),
         #                               batch_real_A["ids"],
         #                               get_text_field_mask(batch_real_A))
 
-        #self._metric_accuracy_cycle_BAB(batch_reconstructed_B['onehots'].detach(),
+        # self._metric_accuracy_cycle_BAB(batch_reconstructed_B['onehots'].detach(),
         #                               batch_real_B["ids"],
         #                               get_text_field_mask(batch_real_B))
 
         self.metric_loss_cycle_ABA(loss_cycle_ABA.item())
         self.metric_loss_cycle_BAB(loss_cycle_BAB.item())
 
-        self.metric_loss_generator_A_to_B(loss_generator_A_to_B.item())
-        self.metric_loss_generator_B_to_A(loss_generator_B_to_A.item())
+        self.metric_loss_generator_A_to_B(loss_g_A_to_B.item())
+        self.metric_loss_generator_B_to_A(loss_g_B_to_A.item())
 
-        self.metric_loss_discriminator_A_real(loss_discriminator_A_real.item())
-        self.metric_loss_discriminator_A_fake(loss_discriminator_A_fake.item())
-        self.metric_loss_discriminator_B_real(loss_discriminator_B_real.item())
-        self.metric_loss_discriminator_B_fake(loss_discriminator_B_fake.item())
-
-        total_loss = loss_generator_A_to_B + loss_cycle_ABA + loss_generator_B_to_A + loss_cycle_BAB + \
-                     loss_discriminator_A_real + loss_discriminator_A_fake + \
-                     loss_discriminator_B_real + loss_discriminator_B_fake
+        self.metric_loss_discriminator_A_real(loss_d_A_real.item())
+        self.metric_loss_discriminator_A_fake(loss_d_A_fake.item())
+        self.metric_loss_discriminator_B_real(loss_d_B_real.item())
+        self.metric_loss_discriminator_B_fake(loss_d_B_fake.item())
 
         return {"loss": total_loss}
+
+    def _forward_cycle(self, batch_real, batch_fake, generator_fake_to_real):
+        batch_reconstructed = generator_fake_to_real(source_batch=batch_fake, target_batch=batch_real)
+        loss_cycle = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed,
+                                                 batch_original=batch_real)
+
+        return loss_cycle
+
+    def _forward_generator(self, batch_fake_target, discriminator_target):
+        probs_batch_fake = discriminator_target(batch=batch_fake_target)
+        loss_generator = self._loss_calculator_generator(probs_fake_batch_being_real=probs_batch_fake)
+
+        return loss_generator
 
     def _forward_discriminator(self, batch_real, batch_fake, discriminator):
         probs_batch_real = discriminator(batch=batch_real)
         loss_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real,
                                                         batch_is_real=True)
 
-        probs_batch_fake = discriminator(batch=batch_fake)
+        # detach from generator
+        batch_fake_detached = self._detach_batch(batch_fake)
+        probs_batch_fake = discriminator(batch=batch_fake_detached)
         loss_fake = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_fake,
                                                         batch_is_real=False)
 
