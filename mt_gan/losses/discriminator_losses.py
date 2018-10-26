@@ -22,9 +22,9 @@ class ClassicDiscriminatorLoss(_DiscriminatorLoss):
         Takes a fake or real probabilities batch of examples being real and returns a single loss value to minimize.
         """
         if batch_is_real:  # we want to maximize probs of real batch being real, so need to invert probs
-            examples_losses = 1 - probs_batch_being_real["onehots"]
+            examples_losses = 1 - probs_batch_being_real
         else:
-            examples_losses = probs_batch_being_real["onehots"]  # we want to minimize probs of fake batch being real
+            examples_losses = probs_batch_being_real  # we want to minimize probs of fake batch being real
 
         if self.reduction == "elementwise_mean":  # default
             loss = torch.mean(examples_losses)
