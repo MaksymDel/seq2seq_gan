@@ -7,7 +7,7 @@ from allennlp.modules import Attention, Seq2SeqEncoder, Seq2VecEncoder
 from allennlp.models.model import Model
 from allennlp.modules.token_embedders import Embedding
 from allennlp.nn.util import get_text_field_mask
-
+from allennlp.data import Token
 from mt_gan.generators_discriminators import Seq2Prob, Rnn2Rnn
 
 import typing
@@ -78,7 +78,8 @@ class MtGan(Model):
                  discriminator_A: Seq2Prob,
                  discriminator_B: Seq2Prob,
                  vocab_namespace_A: str,
-                 vocab_namespace_B: str) -> None:
+                 vocab_namespace_B: str,
+                 g_metrics_to_print="accuracy-loss") -> None:
         super(MtGan, self).__init__(vocab)
 
         # define players of min-max game
@@ -98,28 +99,47 @@ class MtGan(Model):
         self._loss_calculator_discriminator = ClassicDiscriminatorLoss()
 
         # define metrics to print
-        self._metric_accuracy_cycle_ABA = metrics.CategoricalAccuracy()
-        self._metric_accuracy_cycle_BAB = metrics.CategoricalAccuracy()
+        self._g_metrics_to_print = g_metrics_to_print.split("-")
 
-        self.metric_loss_cycle_ABA = metrics.Average()
-        self.metric_loss_cycle_BAB = metrics.Average()
+        if "accuracy" in self._g_metrics_to_print:
+            # self.metric_accuracy_cycle_ABA = metrics.BooleanAccuracy()
+            # self.metric_accuracy_cycle_BAB = metrics.BooleanAccuracy()
+            #
+            # self.metric_accuracy_generator_A_to_B = metrics.BooleanAccuracy()
+            # self.metric_accuracy_generator_B_to_A = metrics.BooleanAccuracy()
 
-        self.metric_loss_generator_A_to_B = metrics.Average()
-        self.metric_loss_generator_B_to_A = metrics.Average()
+            self.metric_accuracy_cycle_ABA = metrics.Average()
+            self.metric_accuracy_cycle_BAB = metrics.Average()
+
+            self.metric_accuracy_generator_A_to_B = metrics.Average()
+            self.metric_accuracy_generator_B_to_A = metrics.Average()
+
+        if "loss" in self._g_metrics_to_print:
+            self.metric_loss_cycle_ABA = metrics.Average()
+            self.metric_loss_cycle_BAB = metrics.Average()
+
+            self.metric_loss_generator_A_to_B = metrics.Average()
+            self.metric_loss_generator_B_to_A = metrics.Average()
 
         self.metric_loss_discriminator_A_real = metrics.Average()
         self.metric_loss_discriminator_A_fake = metrics.Average()
         self.metric_loss_discriminator_B_real = metrics.Average()
         self.metric_loss_discriminator_B_fake = metrics.Average()
 
-        print(discriminator_B)
     @overrides
     def forward(self,  # type: ignore
                 batch_real_A: Dict[str, torch.LongTensor] = None,
-                batch_real_B: Dict[str, torch.LongTensor] = None) -> Dict[str, torch.Tensor]:
+                batch_real_B: Dict[str, torch.LongTensor] = None,
+                batch_answers_for_A: Dict[str, torch.LongTensor] = None,
+                batch_answers_for_B: Dict[str, torch.LongTensor] = None) -> Dict[str, torch.Tensor]:
         # pylint: disable=arguments-differ
         """
         Make foward pass with decoder logic for producing the entire target sequence.
+
+        We optionally use answers only to better track progress during experimentation (for metrics).
+        They are just a metadata and do not help the model to learn in any way.
+
+        Answers for B in in A domain and vice versa.
 
         Parameters
         ----------
@@ -153,9 +173,9 @@ class MtGan(Model):
         # Loss generator B -> A
         loss_g_B_to_A = self._forward_generator(batch_fake_A, self._discriminator_A)
         # Cycle loss A -> B -> A
-        loss_cycle_ABA = self._forward_cycle(batch_real_A, batch_fake_B, self._generator_B_to_A)
+        loss_cycle_ABA, batch_reconstructed_A = self._forward_cycle(batch_real_A, batch_fake_B, self._generator_B_to_A)
         # Cycle loss B -> A -> B
-        loss_cycle_BAB = self._forward_cycle(batch_real_B, batch_fake_A, self._generator_A_to_B)
+        loss_cycle_BAB, batch_reconstructed_B = self._forward_cycle(batch_real_B, batch_fake_A, self._generator_A_to_B)
 
         # LOSSES FOR DISCRIMINATORS: unfreeze them now!
         self._set_requires_grad([self._discriminator_A, self._discriminator_B], True)
@@ -172,20 +192,49 @@ class MtGan(Model):
                      loss_d_B_real + loss_d_B_fake
 
         # -------------------------------------------------------------------------------------------------------------
-        # compute metrics
-        # self._metric_accuracy_cycle_ABA(batch_reconstructed_A['onehots'].detach(),
-        #                               batch_real_A["ids"],
-        #                               get_text_field_mask(batch_real_A))
 
-        # self._metric_accuracy_cycle_BAB(batch_reconstructed_B['onehots'].detach(),
-        #                               batch_real_B["ids"],
-        #                               get_text_field_mask(batch_real_B))
+        # Compute metrics
+        if "accuracy" in self._g_metrics_to_print:
+            y = batch_answers_for_A["ids"]
+            s = y.size()
+            y_hat = batch_fake_B['ids'][0:s[0], 0:s[1]]
+            mask = get_text_field_mask(batch_answers_for_A)
+            m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
+            # self.metric_accuracy_generator_A_to_B(y_hat, y, mask)
+            self.metric_accuracy_generator_A_to_B(m)
 
-        self.metric_loss_cycle_ABA(loss_cycle_ABA.item())
-        self.metric_loss_cycle_BAB(loss_cycle_BAB.item())
+            y = batch_answers_for_B["ids"]
+            s = y.size()
+            y_hat = batch_fake_A['ids'][0:s[0], 0:s[1]]
+            # mask = get_text_field_mask(batch_answers_for_B)
+            m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
+            #self.metric_accuracy_generator_B_to_A(y_hat, y, mask)
+            self.metric_accuracy_generator_B_to_A(m)
 
-        self.metric_loss_generator_A_to_B(loss_g_A_to_B.item())
-        self.metric_loss_generator_B_to_A(loss_g_B_to_A.item())
+            # TODO: fix EOS / SOS symbols and cut to real tensor mask
+            y_hat = batch_reconstructed_A["ids"]
+            s = y_hat.size()
+            y = batch_real_A['ids'][0:s[0], 0:s[1]]
+            mask = get_text_field_mask(batch_reconstructed_A)
+            m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
+            #self.metric_accuracy_cycle_ABA(y_hat, y, mask)
+            self.metric_accuracy_cycle_ABA(m)
+
+            # TODO: fix EOS / SOS symbols and cut to real tensor mask
+            y_hat = batch_reconstructed_B["ids"]
+            s = y_hat.size()
+            y = batch_real_B['ids'][0:s[0], 0:s[1]]
+            # mask = get_text_field_mask(batch_reconstructed_B)
+            m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
+            #self.metric_accuracy_cycle_BAB(y_hat, y, mask)
+            self.metric_accuracy_cycle_BAB(m)
+
+        if "loss" in self._g_metrics_to_print:
+            self.metric_loss_cycle_ABA(loss_cycle_ABA.item())
+            self.metric_loss_cycle_BAB(loss_cycle_BAB.item())
+
+            self.metric_loss_generator_A_to_B(loss_g_A_to_B.item())
+            self.metric_loss_generator_B_to_A(loss_g_B_to_A.item())
 
         self.metric_loss_discriminator_A_real(loss_d_A_real.item())
         self.metric_loss_discriminator_A_fake(loss_d_A_fake.item())
@@ -199,7 +248,7 @@ class MtGan(Model):
         loss_cycle = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed,
                                                  batch_original=batch_real)
 
-        return loss_cycle
+        return loss_cycle, batch_reconstructed
 
     def _forward_generator(self, batch_fake_target, discriminator_target):
         probs_batch_fake = discriminator_target(batch=batch_fake_target)
@@ -213,31 +262,37 @@ class MtGan(Model):
                                                         batch_is_real=True)
 
         # detach from generator
-        batch_fake_detached = self._detach_batch(batch_fake)
+        batch_fake_detached = self._detach_batch(batch_fake)  # TODO: implement experience reply
         probs_batch_fake = discriminator(batch=batch_fake_detached)
         loss_fake = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_fake,
                                                         batch_is_real=False)
 
         return loss_real, loss_fake
 
-
-
-
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
+        metrics_dict = {}
 
-        return {#"acc_cycle_ABA": self._metric_accuracy_cycle_ABA.get_metric(reset),
-                #"acc_cycle_BAB": self._metric_accuracy_cycle_BAB.get_metric(reset),
+        if "loss" in self._g_metrics_to_print:
+            metrics_dict.update({
+                "l_cycle_ABA": self.metric_loss_cycle_ABA.get_metric(reset),
+                "l_cycle_BAB": self.metric_loss_cycle_BAB.get_metric(reset),
+                "l_g_A2B": self.metric_loss_generator_A_to_B.get_metric(reset),
+                "l_g_B2A": self.metric_loss_generator_B_to_A.get_metric(reset)})
 
-                "loss_cycle_ABA": self.metric_loss_cycle_ABA.get_metric(reset),
-                "loss_cycle_BAB": self.metric_loss_cycle_BAB.get_metric(reset),
+        metrics_dict.update({
+            "l_d_A_real": self.metric_loss_discriminator_A_real.get_metric(reset),
+            "l_d_A_fake": self.metric_loss_discriminator_A_fake.get_metric(reset),
+            "l_d_B_real": self.metric_loss_discriminator_B_real.get_metric(reset),
+            "l_d_B_fake": self.metric_loss_discriminator_B_fake.get_metric(reset)})
 
-                "loss_g_A_to_B": self.metric_loss_generator_A_to_B.get_metric(reset),
-                "loss_g_B_to_A": self.metric_loss_generator_B_to_A.get_metric(reset),
+        if "accuracy" in self._g_metrics_to_print:
+            metrics_dict.update({
+                "acc_cycle_ABA": self.metric_accuracy_cycle_ABA.get_metric(reset),
+                "acc_cycle_BAB": self.metric_accuracy_cycle_BAB.get_metric(reset),
+                "acc_g_A2B": self.metric_accuracy_generator_A_to_B.get_metric(reset),
+                "acc_g_B2A": self.metric_accuracy_generator_B_to_A.get_metric(reset)})
 
-                "loss_d_A_real": self.metric_loss_discriminator_A_real.get_metric(reset),
-                "loss_d_A_fake": self.metric_loss_discriminator_A_fake.get_metric(reset),
-                "loss_d_B_real": self.metric_loss_discriminator_B_real.get_metric(reset),
-                "loss_d_B_fake": self.metric_loss_discriminator_B_fake.get_metric(reset)}
+        return metrics_dict
 
     @overrides
     def decode(self, output_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:

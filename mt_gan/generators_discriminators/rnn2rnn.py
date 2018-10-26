@@ -362,13 +362,6 @@ class Rnn2Rnn(Model):
                 "ids": all_predictions,
         }
 
-        # Compute loss.
-        if target_tokens:
-            target_mask = util.get_text_field_mask(target_tokens)
-            loss = self._get_loss(logits, targets, target_mask)
-            output_dict["loss"] = loss
-            # TODO: Define metrics.
-
         return output_dict
 
     def _forward_beam_search(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
@@ -454,41 +447,3 @@ class Rnn2Rnn(Model):
         attended_input = util.weighted_sum(encoder_outputs, input_weights)
 
         return attended_input
-
-    @staticmethod
-    def _get_loss(logits: torch.LongTensor,
-                  targets: torch.LongTensor,
-                  target_mask: torch.LongTensor) -> torch.Tensor:
-        """
-        Compute loss.
-
-        Takes logits (unnormalized output from the decoder) of size (batch_size,
-        num_decoding_steps, num_classes), target indices of size (batch_size, num_decoding_steps+1)
-        and corresponding masks of size (batch_size, num_decoding_steps+1) steps and computes cross
-        entropy loss while taking the mask into account.
-
-        The length of ``targets`` is expected to be greater than that of ``logits`` because the
-        decoder does not need to compute the output corresponding to the last timestep of
-        ``targets``. This method aligns the inputs appropriately to compute the loss.
-
-        During training, we want the logit corresponding to timestep i to be similar to the target
-        token from timestep i + 1. That is, the targets should be shifted by one timestep for
-        appropriate comparison.  Consider a single example where the target has 3 words, and
-        padding is to 7 tokens.
-           The complete sequence would correspond to <S> w1  w2  w3  <E> <P> <P>
-           and the mask would be                     1   1   1   1   1   0   0
-           and let the logits be                     l1  l2  l3  l4  l5  l6
-        We actually need to compare:
-           the sequence           w1  w2  w3  <E> <P> <P>
-           with masks             1   1   1   1   0   0
-           against                l1  l2  l3  l4  l5  l6
-           (where the input was)  <S> w1  w2  w3  <E> <P>
-        """
-        # shape: (batch_size, num_decoding_steps)
-        relevant_targets = targets[:, 1:].contiguous()
-
-        # shape: (batch_size, num_decoding_steps)
-        relevant_mask = target_mask[:, 1:].contiguous()
-
-        return util.sequence_cross_entropy_with_logits(logits, relevant_targets, relevant_mask)
-

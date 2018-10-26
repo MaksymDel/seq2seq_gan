@@ -7,7 +7,7 @@ from allennlp.common.checks import ConfigurationError
 from allennlp.common.file_utils import cached_path
 from allennlp.common.util import START_SYMBOL, END_SYMBOL
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
-from allennlp.data.fields import TextField
+from allennlp.data.fields import TextField, MetadataField
 from allennlp.data.instance import Instance
 from allennlp.data.tokenizers import Token, Tokenizer, WordTokenizer
 from allennlp.data.tokenizers.word_splitter import JustSpacesWordSplitter
@@ -15,6 +15,7 @@ from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
+# TODO: process optional answers as a MetadataField
 
 @DatasetReader.register("unaligned_corpora")
 class UnilignedCorporaDatasetReader(DatasetReader):
@@ -58,8 +59,8 @@ class UnilignedCorporaDatasetReader(DatasetReader):
         self._tokenizer_A = tokenizer_A or WordTokenizer(word_splitter=JustSpacesWordSplitter())
         self._tokenizer_B = tokenizer_B or self._tokenizer_A
 
-        self._source_token_indexers = token_indexers_A or {"ids": SingleIdTokenIndexer(namespace="vocab_A")}
-        self._target_token_indexers = token_indexers_B or {"ids": SingleIdTokenIndexer(namespace="vocab_B")}
+        self._token_indexers_A = token_indexers_A or {"ids": SingleIdTokenIndexer(namespace="vocab_A")}
+        self._token_indexers_B = token_indexers_B or {"ids": SingleIdTokenIndexer(namespace="vocab_B")}
 
     @overrides
     def _read(self, file_path):
@@ -72,32 +73,51 @@ class UnilignedCorporaDatasetReader(DatasetReader):
                     continue
 
                 line_parts = line.split('\t')
-                if len(line_parts) != 2:
+
+                if len(line_parts) == 3:
                     raise ConfigurationError("Invalid line format: %s (line number %d)" % (line, line_num + 1))
-                source_sequence, target_sequence = line_parts
-                yield self.text_to_instance(source_sequence, target_sequence)
+                elif len(line_parts) > 4:
+                    raise ConfigurationError("Invalid line format: %s (line number %d)" % (line, line_num + 1))
+
+                if len(line_parts) == 2:
+                    string_A, string_B = line_parts
+                    yield self.text_to_instance(string_A, string_B)
+                elif len(line_parts) == 4:
+                    string_A, string_B, answers_for_A, answers_for_B = line_parts
+                    yield self.text_to_instance(string_A, string_B, answers_for_A, answers_for_B)
 
     @overrides
-    def text_to_instance(self, string_A: str = None, string_B: str = None) -> Instance:  # type: ignore
+    def text_to_instance(self, string_A: str = None, string_B: str = None,
+                         answers_for_A: str = None, answers_for_B: str = None) -> Instance:  # type: ignore
+
         # pylint: disable=arguments-differ
         if string_A is None and string_B is None:
             raise ValueError("You should provide a batch at least in one domain")
 
         field_name_A = "batch_real_A"
         field_name_B = "batch_real_B"
-        if string_A is not None and string_B is not None:
-            field_A = self.string_to_field(string_A, self._source_token_indexers)
-            field_B = self.string_to_field(string_B, self._target_token_indexers)
-            return Instance({field_name_A: field_A, field_name_B: field_B})
-        elif string_A is not None:
-            field_A = self.string_to_field(string_A, self._source_token_indexers)
-            return Instance({field_name_A: field_A})
-        elif string_B is not None:
-            field_B = self.string_to_field(string_B, self._target_token_indexers)
-            return Instance({field_name_B: field_B})
+        filed_name_answers_for_A = "batch_answers_for_A"
+        filed_name_answers_for_B = "batch_answers_for_B"
 
-    def string_to_field(self, string, token_indexers):
-        tokenized_string = self._tokenizer_A.tokenize(string)
+        fields_dict = {}
+        if string_A is not None:  # test time
+            field_A = self.string_to_field(string_A, self._token_indexers_A, self._tokenizer_A)
+            fields_dict.update({field_name_A: field_A})
+        if string_B is not None:  # test time
+            field_B = self.string_to_field(string_B, self._token_indexers_B, self._tokenizer_B)
+            fields_dict.update({field_name_B: field_B})
+        if answers_for_A is not None:
+            field_answers_for_A = self.string_to_field(answers_for_A, self._token_indexers_B, self._tokenizer_B)
+            fields_dict.update({filed_name_answers_for_A: field_answers_for_A})
+        if answers_for_B is not None:
+            field_answers_for_B = self.string_to_field(answers_for_B, self._token_indexers_A, self._tokenizer_A)
+            fields_dict.update({filed_name_answers_for_B: field_answers_for_B})
+
+        return Instance(fields_dict)
+
+    @staticmethod
+    def string_to_field(string, token_indexers, tokenizer):
+        tokenized_string = tokenizer.tokenize(string)
         tokenized_string.insert(0, Token(START_SYMBOL))
         tokenized_string.append(Token(END_SYMBOL))
         field = TextField(tokenized_string, token_indexers)
