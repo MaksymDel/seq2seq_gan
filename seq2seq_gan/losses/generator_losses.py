@@ -1,7 +1,7 @@
-from overrides import overrides
 from typing import Dict
 
 import torch
+from overrides import overrides
 from torch.nn.modules.loss import _Loss
 
 

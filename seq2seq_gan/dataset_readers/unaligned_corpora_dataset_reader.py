@@ -1,19 +1,19 @@
-from typing import Dict
 import logging
-
-from overrides import overrides
+from typing import Dict
 
 from allennlp.common.checks import ConfigurationError
 from allennlp.common.file_utils import cached_path
 from allennlp.common.util import END_SYMBOL
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
-from allennlp.data.fields import TextField, MetadataField
+from allennlp.data.fields import TextField
 from allennlp.data.instance import Instance
+from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token, Tokenizer, WordTokenizer
 from allennlp.data.tokenizers.word_splitter import JustSpacesWordSplitter
-from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
+from overrides import overrides
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
 
 # TODO: process optional answers as a MetadataField
 
@@ -48,6 +48,7 @@ class UnilignedCorporaDatasetReader(DatasetReader):
     source_add_start_token : bool, (optional, default=True)
         Whether or not to add `START_SYMBOL` to the beginning of the source sequence.
     """
+
     def __init__(self,
                  tokenizer_A: Tokenizer = None,
                  tokenizer_B: Tokenizer = None,

@@ -1,7 +1,8 @@
-from torch.nn.modules.loss import _Loss
+from typing import Dict
+
 import torch
 from overrides import overrides
-from typing import Dict
+from torch.nn.modules.loss import _Loss
 
 
 class _DiscriminatorLoss(_Loss):
@@ -34,8 +35,3 @@ class ClassicDiscriminatorLoss(_DiscriminatorLoss):
             raise NotImplementedError
 
         return loss
-
-
-
-
-

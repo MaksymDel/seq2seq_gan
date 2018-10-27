@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Union, Tuple, Optional
+from typing import Dict
 
 import numpy
 import torch
@@ -11,9 +11,9 @@ from allennlp.modules import Attention, Seq2SeqEncoder, Seq2VecEncoder
 from allennlp.modules.token_embedders import Embedding
 from allennlp.training.metrics import Average
 
-from seq2seq_gan.modules import BasicDiscriminator, RnnDecoderGenerator
-from seq2seq_gan.metrics import PerElementAccuracy
 from seq2seq_gan.losses import *
+from seq2seq_gan.metrics import PerElementAccuracy
+from seq2seq_gan.modules import BasicDiscriminator, RnnDecoderGenerator
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -201,8 +201,7 @@ class MtGan(Model):
 
     def _forward_cycle(self, real, fake, generator_fake_to_real):
         reconstructed = generator_fake_to_real(source_tokens=fake, target_tokens=real)
-        loss_cycle = self._loss_calculator_cycle(reconstructed=reconstructed,
-                                                 original=real)
+        loss_cycle = self._loss_calculator_cycle(reconstructed=reconstructed, original=real)
         return loss_cycle, reconstructed
 
     def _forward_generator(self, real, generator_real_to_fake, discriminator_target):
@@ -214,14 +213,12 @@ class MtGan(Model):
 
     def _forward_discriminator(self, real, fake, discriminator):
         probs_real = discriminator(tokens=real)
-        loss_real = self._loss_calculator_discriminator(probs_being_real=probs_real,
-                                                        is_real=True)
+        loss_real = self._loss_calculator_discriminator(probs_being_real=probs_real, is_real=True)
 
         # detach from generator
         fake_detached = self._detach_batch(fake)  # TODO: implement experience reply
         probs_fake = discriminator(tokens=fake_detached)
-        loss_fake = self._loss_calculator_discriminator(probs_being_real=probs_fake,
-                                                        is_real=False)
+        loss_fake = self._loss_calculator_discriminator(probs_being_real=probs_fake, is_real=False)
 
         return loss_real, loss_fake
 
@@ -383,6 +380,3 @@ class MtGan(Model):
                    vocab_namespace_B=vocab_namespace_B,
                    cycle_loss_weight=cycle_loss_weight,
                    g_metrics_to_print=g_metrics_to_print)
-
-
-

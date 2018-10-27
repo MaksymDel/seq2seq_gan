@@ -1,27 +1,25 @@
 from typing import Dict, Tuple, List
 
 import numpy
-from overrides import overrides
 import torch
 import torch.nn.functional as F
-from torch.nn.modules.linear import Linear
-from torch.nn.modules.rnn import LSTMCell
-
 from allennlp.common.checks import ConfigurationError
-from allennlp.common.util import START_SYMBOL, END_SYMBOL
-from allennlp.modules.attention import LegacyAttention
+from allennlp.common.util import END_SYMBOL
+from allennlp.data import Vocabulary
 from allennlp.modules import Attention, Seq2SeqEncoder
+from allennlp.modules.attention import LegacyAttention
 from allennlp.modules.similarity_functions import SimilarityFunction
-from allennlp.models.model import Model
 from allennlp.modules.token_embedders import Embedding
 from allennlp.nn import util
 from allennlp.nn.beam_search import BeamSearch
-from allennlp.data import Vocabulary
+from overrides import overrides
+from torch.nn.modules.linear import Linear
+from torch.nn.modules.rnn import LSTMCell
 
 from seq2seq_gan.modules.generators.generator import Generator
 
 
-#Model.register("rnn_decoder")
+# Model.register("rnn_decoder")
 class RnnDecoderGenerator(Generator):
     """
     This ``Rnn2Rnn`` class is a :class:`Model` which takes a sequence, encodes it, and then
@@ -185,8 +183,6 @@ class RnnDecoderGenerator(Generator):
         else:
             self._beam_search = None
 
-
-
     @overrides
     def forward(self,  # type: ignore
                 source_tokens: Dict[str, torch.LongTensor],
@@ -247,7 +243,7 @@ class RnnDecoderGenerator(Generator):
             indices = list(indices)
             # Collect indices till the first end_symbol inclusively, thus + 1
             if self._end_index_target in indices:
-                indices = indices[:indices.index(self._end_index_target)+1]
+                indices = indices[:indices.index(self._end_index_target) + 1]
             predicted_tokens = [self.vocab.get_token_from_index(x, namespace=self._target_namespace)
                                 for x in indices]
             all_predicted_tokens.append(predicted_tokens)
@@ -271,9 +267,9 @@ class RnnDecoderGenerator(Generator):
 
         # shape: (batch_size, encoder_output_dim)
         final_encoder_output = util.get_final_encoder_states(
-                encoder_outputs,
-                source_mask,
-                self._encoder.is_bidirectional())
+            encoder_outputs,
+            source_mask,
+            self._encoder.is_bidirectional())
 
         # Initialize the decoder hidden state with the final output of the encoder.
         # shape: (batch_size, decoder_output_dim)
@@ -283,10 +279,10 @@ class RnnDecoderGenerator(Generator):
         decoder_context = encoder_outputs.new_zeros(batch_size, self._decoder_output_dim)
 
         state = {
-                "source_mask": source_mask,
-                "encoder_outputs": encoder_outputs,
-                "decoder_hidden": decoder_hidden,
-                "decoder_context": decoder_context
+            "source_mask": source_mask,
+            "encoder_outputs": encoder_outputs,
+            "decoder_hidden": decoder_hidden,
+            "decoder_context": decoder_context
         }
 
         return state
@@ -363,9 +359,9 @@ class RnnDecoderGenerator(Generator):
         all_predictions = torch.cat(step_predictions, 1)
 
         output_dict = {
-               # "logits": logits,
-                "onehots": class_probabilities,
-                "ids": all_predictions,
+            # "logits": logits,
+            "onehots": class_probabilities,
+            "ids": all_predictions,
         }
 
         return output_dict
@@ -378,17 +374,18 @@ class RnnDecoderGenerator(Generator):
         # shape (all_top_k_predictions): (batch_size, beam_size, num_decoding_steps)
         # shape (log_probabilities): (batch_size, beam_size)
         all_top_k_predictions, log_probabilities = self._beam_search.search(
-                start_predictions, state, self.take_step)
+            start_predictions, state, self.take_step)
 
         output_dict = {
-                "class_log_probabilities": log_probabilities,
-                "ids": all_top_k_predictions,
+            "class_log_probabilities": log_probabilities,
+            "ids": all_top_k_predictions,
         }
         return output_dict
 
     def _prepare_output_projections(self,
                                     last_predictions: torch.Tensor,
-                                    state: Dict[str, torch.Tensor]) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:  # pylint: disable=line-too-long
+                                    state: Dict[str, torch.Tensor]) -> Tuple[
+        torch.Tensor, Dict[str, torch.Tensor]]:  # pylint: disable=line-too-long
         """
         Decode current state and last prediction to produce produce projections
         into the target space, which can then be used to get probabilities of
@@ -424,8 +421,8 @@ class RnnDecoderGenerator(Generator):
         # shape (decoder_hidden): (batch_size, decoder_output_dim)
         # shape (decoder_context): (batch_size, decoder_output_dim)
         decoder_hidden, decoder_context = self._decoder_cell(
-                decoder_input,
-                (decoder_hidden, decoder_context))
+            decoder_input,
+            (decoder_hidden, decoder_context))
 
         state["decoder_hidden"] = decoder_hidden
         state["decoder_context"] = decoder_context
@@ -447,7 +444,7 @@ class RnnDecoderGenerator(Generator):
 
         # shape: (batch_size, max_input_sequence_length)
         input_weights = self._attention(
-                decoder_hidden_state, encoder_outputs, encoder_outputs_mask)
+            decoder_hidden_state, encoder_outputs, encoder_outputs_mask)
 
         # shape: (batch_size, encoder_output_dim)
         attended_input = util.weighted_sum(encoder_outputs, input_weights)

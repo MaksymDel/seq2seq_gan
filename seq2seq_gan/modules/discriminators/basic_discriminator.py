@@ -1,20 +1,18 @@
 from typing import Dict
 
 import torch
-from overrides import overrides
-
-from allennlp.models.model import Model
+from allennlp.data import Vocabulary
 from allennlp.modules import Seq2VecEncoder
 from allennlp.modules.token_embedders import Embedding
 from allennlp.nn import util
+from overrides import overrides
 from torch.nn import Sigmoid
 from torch.nn.modules import Linear
-from allennlp.data import Vocabulary
 
 from seq2seq_gan.modules.discriminators.discriminator import Discriminator
 
 
-#Model.register("basic")
+# Model.register("basic")
 class BasicDiscriminator(Discriminator):
     """
     Predicts the probability of batch being real

@@ -1,15 +1,9 @@
 from typing import Dict
 
 import torch
-from overrides import overrides
-
-from allennlp.models.model import Model
-from allennlp.modules import Seq2VecEncoder
-from allennlp.modules.token_embedders import Embedding
-from allennlp.nn import util
-from torch.nn import Sigmoid
-from torch.nn.modules import Linear
 from allennlp.data import Vocabulary
+from allennlp.models.model import Model
+from overrides import overrides
 
 
 class Discriminator(Model):
@@ -27,7 +21,6 @@ class Discriminator(Model):
     def __init__(self,
                  vocab: Vocabulary) -> None:
         super().__init__(vocab)
-
 
     @overrides
     def forward(self, tokens: Dict[str, torch.LongTensor]) -> torch.Tensor:

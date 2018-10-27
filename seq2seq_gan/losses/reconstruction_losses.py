@@ -1,11 +1,10 @@
 import warnings
-from overrides import overrides
 from typing import Dict
 
 import torch
-from torch.nn.modules.loss import _Loss
-
 from allennlp.nn.util import get_text_field_mask
+from overrides import overrides
+from torch.nn.modules.loss import _Loss
 
 
 class _ReconstructionLoss(_Loss):
@@ -155,4 +154,3 @@ class CrossEntropyReconstructionLoss(_ReconstructionLoss):
             # shape : (batch_size,)
             per_batch_loss = negative_log_likelihood.sum(1) / (weights.sum(1).float() + 1e-13)
             return per_batch_loss
-
