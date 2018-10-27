@@ -1,0 +1,2 @@
+from mt_gan.generators_discriminators.seq2prob import Seq2Prob
+from mt_gan.generators_discriminators.rnn2rnn import Rnn2Rnn
