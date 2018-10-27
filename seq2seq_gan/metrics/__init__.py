@@ -1,0 +1,1 @@
+from seq2seq_gan.metrics.per_element_accuracy import PerElementAccuracy

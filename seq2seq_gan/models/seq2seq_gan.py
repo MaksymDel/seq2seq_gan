@@ -9,9 +9,10 @@ from allennlp.data.vocabulary import Vocabulary
 from allennlp.models.model import Model
 from allennlp.modules import Attention, Seq2SeqEncoder, Seq2VecEncoder
 from allennlp.modules.token_embedders import Embedding
-from allennlp.training import metrics
+from allennlp.training.metrics import Average
 
 from seq2seq_gan.modules import Seq2ProbDiscriminator, Rnn2RnnGenerator
+from seq2seq_gan.metrics import PerElementAccuracy
 from seq2seq_gan.losses import *
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -102,15 +103,15 @@ class MtGan(Model):
             self.metric_accuracy_g_B_to_A = PerElementAccuracy()
 
         if "loss" in self._g_metrics_to_print:
-            self.metric_loss_cycle_ABA = metrics.Average()
-            self.metric_loss_cycle_BAB = metrics.Average()
-            self.metric_loss_g_A_to_B = metrics.Average()
-            self.metric_loss_g_B_to_A = metrics.Average()
+            self.metric_loss_cycle_ABA = Average()
+            self.metric_loss_cycle_BAB = Average()
+            self.metric_loss_g_A_to_B = Average()
+            self.metric_loss_g_B_to_A = Average()
 
-        self.metric_loss_d_A_real = metrics.Average()
-        self.metric_loss_d_A_fake = metrics.Average()
-        self.metric_loss_d_B_real = metrics.Average()
-        self.metric_loss_d_B_fake = metrics.Average()
+        self.metric_loss_d_A_real = Average()
+        self.metric_loss_d_A_fake = Average()
+        self.metric_loss_d_B_real = Average()
+        self.metric_loss_d_B_fake = Average()
 
     @overrides
     def forward(self,  # type: ignore
@@ -379,57 +380,4 @@ class MtGan(Model):
                    g_metrics_to_print=g_metrics_to_print)
 
 
-class PerElementAccuracy(metrics.Metric):
-    """ As opposite to :class:`BooleanAccuracy` computes total number of matched elements, not sequences"""
 
-    def __init__(self) -> None:
-        self._correct_count = 0.
-        self._total_count = 0.
-
-    def __call__(self,
-                 predictions: torch.Tensor,
-                 gold_labels: torch.Tensor,
-                 mask: Optional[torch.Tensor] = None):
-        """
-        Parameters
-        ----------
-        predictions : ``torch.Tensor``, required.
-            A tensor of predictions of shape (batch_size, ...).
-        gold_labels : ``torch.Tensor``, required.
-            A tensor of the same shape as ``predictions``.
-        mask: ``torch.Tensor``, optional (default = None).
-            A tensor of the same shape as ``predictions``.
-        """
-        predictions, gold_labels, mask = self.unwrap_to_tensors(predictions, gold_labels, mask)
-
-        if mask is not None:
-            # We can multiply by the mask up front, because we're just checking equality below, and
-            # this way everything that's masked will be equal.
-            predictions = predictions * mask
-            gold_labels = gold_labels * mask
-
-        batch_size = predictions.size(0)
-        predictions = predictions.view(batch_size, -1)
-        gold_labels = gold_labels.view(batch_size, -1)
-
-        # The .prod() here is functioning as a logical and.
-        correct = predictions.eq(gold_labels).sum(dim=1).float()
-        count = torch.ones(gold_labels.size())
-        self._correct_count += correct.sum()
-        self._total_count += count.sum()
-
-    def get_metric(self, reset: bool = False):
-        """
-        Returns
-        -------
-        The accumulated accuracy.
-        """
-        accuracy = float(self._correct_count) / float(self._total_count)
-        if reset:
-            self.reset()
-        return accuracy
-
-    @overrides
-    def reset(self):
-        self._correct_count = 0.0
-        self._total_count = 0.0
