@@ -11,9 +11,11 @@ from torch.nn import Sigmoid
 from torch.nn.modules import Linear
 from allennlp.data import Vocabulary
 
+from seq2seq_gan.modules.discriminators.discriminator import Discriminator
 
-#Model.register("seq2prob")
-class Seq2ProbDiscriminator(Model):
+
+#Model.register("basic")
+class BasicDiscriminator(Discriminator):
     """
     Predicts the probability of batch being real
 

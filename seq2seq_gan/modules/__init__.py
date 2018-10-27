@@ -1,2 +1,2 @@
-from seq2seq_gan.modules.discriminators.seq2prob import Seq2ProbDiscriminator
-from seq2seq_gan.modules.generators.rnn2rnn import Rnn2RnnGenerator
+from seq2seq_gan.modules.discriminators.basic_discriminator import BasicDiscriminator
+from seq2seq_gan.modules.generators.rnn2rnn import RnnDecoderGenerator

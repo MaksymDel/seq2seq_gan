@@ -11,7 +11,7 @@ from allennlp.modules import Attention, Seq2SeqEncoder, Seq2VecEncoder
 from allennlp.modules.token_embedders import Embedding
 from allennlp.training.metrics import Average
 
-from seq2seq_gan.modules import Seq2ProbDiscriminator, Rnn2RnnGenerator
+from seq2seq_gan.modules import BasicDiscriminator, RnnDecoderGenerator
 from seq2seq_gan.metrics import PerElementAccuracy
 from seq2seq_gan.losses import *
 
@@ -68,10 +68,10 @@ class MtGan(Model):
     # TODO: make base classes for G and D and specify them as types there
     def __init__(self,
                  vocab: Vocabulary,
-                 generator_A_to_B: Rnn2RnnGenerator,
-                 generator_B_to_A: Rnn2RnnGenerator,
-                 discriminator_A: Seq2ProbDiscriminator,
-                 discriminator_B: Seq2ProbDiscriminator,
+                 generator_A_to_B: RnnDecoderGenerator,
+                 generator_B_to_A: RnnDecoderGenerator,
+                 discriminator_A: BasicDiscriminator,
+                 discriminator_B: BasicDiscriminator,
                  vocab_namespace_A: str,
                  vocab_namespace_B: str,
                  g_metrics_to_print: str) -> None:
@@ -333,23 +333,23 @@ class MtGan(Model):
 
             generators_max_decoding_steps = params_generators.pop("max_decoding_steps")
 
-            generator_A_to_B = Rnn2RnnGenerator(vocab=vocab,
-                                                source_embedding=embedding_A_generator,
-                                                target_embedding=embedding_B_generator,
-                                                encoder=generator_A_to_B_encoder,
-                                                max_decoding_steps=generators_max_decoding_steps,
-                                                source_namespace=vocab_namespace_A,
-                                                target_namespace=vocab_namespace_B,
-                                                attention=attention_generator_A_to_B)
+            generator_A_to_B = RnnDecoderGenerator(vocab=vocab,
+                                                   source_embedding=embedding_A_generator,
+                                                   target_embedding=embedding_B_generator,
+                                                   encoder=generator_A_to_B_encoder,
+                                                   max_decoding_steps=generators_max_decoding_steps,
+                                                   source_namespace=vocab_namespace_A,
+                                                   target_namespace=vocab_namespace_B,
+                                                   attention=attention_generator_A_to_B)
 
-            generator_B_to_A = Rnn2RnnGenerator(vocab=vocab,
-                                                source_embedding=embedding_B_generator,
-                                                target_embedding=embedding_A_generator,
-                                                encoder=generator_B_to_A_encoder,
-                                                max_decoding_steps=generators_max_decoding_steps,
-                                                source_namespace=vocab_namespace_B,
-                                                target_namespace=vocab_namespace_A,
-                                                attention=attention_generator_B_to_A)
+            generator_B_to_A = RnnDecoderGenerator(vocab=vocab,
+                                                   source_embedding=embedding_B_generator,
+                                                   target_embedding=embedding_A_generator,
+                                                   encoder=generator_B_to_A_encoder,
+                                                   max_decoding_steps=generators_max_decoding_steps,
+                                                   source_namespace=vocab_namespace_B,
+                                                   target_namespace=vocab_namespace_A,
+                                                   attention=attention_generator_B_to_A)
         else:
             raise ConfigurationError(message="This generators model type is not supported")
 
@@ -363,10 +363,10 @@ class MtGan(Model):
             embedding_A_discriminator = Embedding(num_classes_A, discriminators_embedding_dim)
             embedding_B_discriminator = Embedding(num_classes_B, discriminators_embedding_dim)
 
-            discriminator_A = Seq2ProbDiscriminator(vocab=vocab, encoder=discriminator_A_encoder,
-                                                    embedding=embedding_A_discriminator)
-            discriminator_B = Seq2ProbDiscriminator(vocab=vocab, encoder=discriminator_B_encoder,
-                                                    embedding=embedding_B_discriminator)
+            discriminator_A = BasicDiscriminator(vocab=vocab, encoder=discriminator_A_encoder,
+                                                 embedding=embedding_A_discriminator)
+            discriminator_B = BasicDiscriminator(vocab=vocab, encoder=discriminator_B_encoder,
+                                                 embedding=embedding_B_discriminator)
         else:
             raise ConfigurationError(message="This discriminators model type is not supported")
 
