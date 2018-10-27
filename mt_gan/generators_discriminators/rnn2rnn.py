@@ -1,5 +1,6 @@
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
+import numpy
 from overrides import overrides
 import torch
 import torch.nn.functional as F
@@ -15,9 +16,7 @@ from allennlp.models.model import Model
 from allennlp.modules.token_embedders import Embedding
 from allennlp.nn import util
 from allennlp.nn.beam_search import BeamSearch
-
-from misc.utils_data import *
-
+from allennlp.data import Vocabulary
 
 #Model.register("rnn2rnn")
 class Rnn2Rnn(Model):

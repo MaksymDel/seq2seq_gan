@@ -7,9 +7,9 @@ from allennlp.models.model import Model
 from allennlp.modules import Seq2VecEncoder
 from allennlp.modules.token_embedders import Embedding
 from allennlp.nn import util
-from misc.utils_data import *
 from torch.nn import Sigmoid
 from torch.nn.modules import Linear
+from allennlp.data import Vocabulary
 
 #Model.register("seq2prob")
 class Seq2Prob(Model):
