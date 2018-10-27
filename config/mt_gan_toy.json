@@ -2,16 +2,19 @@
   "dataset_reader": {
     "type": "unaligned_corpora"
   },
-  "train_data_path": "toy_data/len10/train_with_answers.txt",
+  // "train_data_path": "toy_data/len10/train_with_answers.txt",
+  "train_data_path": "toy_data/len10/dev_with_answers.txt",
   "validation_data_path": "toy_data/len10/dev_with_answers.txt",
 
   "model": {
     "type": "mt_gan",
+    "g_metrics_to_print": "loss-accuracy",
+    // "beam_size": 5,
     // ============= GENERRATORS ARCHITECTURE =============
     "generators": {
       "type": "rnn2rnn",
       "embedding_dim": 30,
-      "max_decoding_steps": 15,
+      "max_decoding_steps": 11,
       "encoder": {
         "type": "lstm",
         "input_size": 30,
@@ -21,8 +24,7 @@
       },
       "attention": {
         "type": "dot_product"
-      },
-      "beam_size": 5
+      }
     },
 
     // ============= DISCRIMINATORS ARCHITECTURE =============

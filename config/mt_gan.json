@@ -7,11 +7,13 @@
 
   "model": {
     "type": "mt_gan",
+    "g_metrics_to_print": "loss-accuracy",
+    // "beam_size": 5,
     // ============= GENERRATORS ARCHITECTURE =============
     "generators": {
       "type": "rnn2rnn",
       "embedding_dim": 100,
-      "max_decoding_steps": 15,
+      "max_decoding_steps": 11,
       "encoder": {
         "type": "lstm",
         "input_size": 100,
@@ -21,8 +23,7 @@
       },
       "attention": {
         "type": "dot_product"
-      },
-      "beam_size": 5
+      }
     },
 
     // ============= DISCRIMINATORS ARCHITECTURE =============

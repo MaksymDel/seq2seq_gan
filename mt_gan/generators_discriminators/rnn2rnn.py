@@ -214,6 +214,8 @@ class Rnn2Rnn(Model):
             res = self._forward_loop(state, target_tokens=target_tokens)
 
             return res
+
+        raise NotImplementedError("BeamSearch is not correctly working in our settings yet")
         # TODO: Run beam search whenever self.training is False so that we can get
         # metrics during validation. Since we haven't implemented custom metrics yet,
         # it only makes sense to run the beam search during prediction.
@@ -241,9 +243,9 @@ class Rnn2Rnn(Model):
             if len(indices.shape) > 1:
                 indices = indices[0]
             indices = list(indices)
-            # Collect indices till the first end_symbol
+            # Collect indices till the first end_symbol inclusively, thus + 1
             if self._end_index_target in indices:
-                indices = indices[:indices.index(self._end_index_target)]
+                indices = indices[:indices.index(self._end_index_target)+1]
             predicted_tokens = [self.vocab.get_token_from_index(x, namespace=self._target_namespace)
                                 for x in indices]
             all_predicted_tokens.append(predicted_tokens)
@@ -303,8 +305,8 @@ class Rnn2Rnn(Model):
             _, target_sequence_length = targets.size()
 
             # The last input from the target is either padding or the end symbol.
-            # Either way, we don't have to process it.
-            num_decoding_steps = target_sequence_length - 1
+            # We do want to process it because we want to teach the network to include end symbol as the last generated/
+            num_decoding_steps = target_sequence_length
         else:
             num_decoding_steps = self._max_decoding_steps
 

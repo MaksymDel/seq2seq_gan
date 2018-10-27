@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, Union, Tuple, Optional
 
 import numpy
 import torch
@@ -73,7 +73,7 @@ class MtGan(Model):
                  discriminator_B: Seq2Prob,
                  vocab_namespace_A: str,
                  vocab_namespace_B: str,
-                 g_metrics_to_print="accuracy-loss") -> None:
+                 g_metrics_to_print: str) -> None:
         super(MtGan, self).__init__(vocab)
 
         # define players of min-max game
@@ -96,29 +96,21 @@ class MtGan(Model):
         self._g_metrics_to_print = g_metrics_to_print.split("-")
 
         if "accuracy" in self._g_metrics_to_print:
-            # self.metric_accuracy_cycle_ABA = metrics.BooleanAccuracy()
-            # self.metric_accuracy_cycle_BAB = metrics.BooleanAccuracy()
-            #
-            # self.metric_accuracy_generator_A_to_B = metrics.BooleanAccuracy()
-            # self.metric_accuracy_generator_B_to_A = metrics.BooleanAccuracy()
-
-            self.metric_accuracy_cycle_ABA = metrics.Average()
-            self.metric_accuracy_cycle_BAB = metrics.Average()
-
-            self.metric_accuracy_generator_A_to_B = metrics.Average()
-            self.metric_accuracy_generator_B_to_A = metrics.Average()
+            self.metric_accuracy_cycle_ABA = PerElementAccuracy()
+            self.metric_accuracy_cycle_BAB = PerElementAccuracy()
+            self.metric_accuracy_g_A_to_B = PerElementAccuracy()
+            self.metric_accuracy_g_B_to_A = PerElementAccuracy()
 
         if "loss" in self._g_metrics_to_print:
             self.metric_loss_cycle_ABA = metrics.Average()
             self.metric_loss_cycle_BAB = metrics.Average()
+            self.metric_loss_g_A_to_B = metrics.Average()
+            self.metric_loss_g_B_to_A = metrics.Average()
 
-            self.metric_loss_generator_A_to_B = metrics.Average()
-            self.metric_loss_generator_B_to_A = metrics.Average()
-
-        self.metric_loss_discriminator_A_real = metrics.Average()
-        self.metric_loss_discriminator_A_fake = metrics.Average()
-        self.metric_loss_discriminator_B_real = metrics.Average()
-        self.metric_loss_discriminator_B_fake = metrics.Average()
+        self.metric_loss_d_A_real = metrics.Average()
+        self.metric_loss_d_A_fake = metrics.Average()
+        self.metric_loss_d_B_real = metrics.Average()
+        self.metric_loss_d_B_fake = metrics.Average()
 
     @overrides
     def forward(self,  # type: ignore
@@ -185,51 +177,21 @@ class MtGan(Model):
 
         # Compute metrics
         if "accuracy" in self._g_metrics_to_print:
-            y = answers_for_A["ids"]
-            s = y.size()
-            y_hat = fake_B['ids'][0:s[0], 0:s[1]]
-            mask = get_text_field_mask(answers_for_A)
-            m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
-            # self.metric_accuracy_generator_A_to_B(y_hat, y, mask)
-            self.metric_accuracy_generator_A_to_B(m)
-
-            y = answers_for_B["ids"]
-            s = y.size()
-            y_hat = fake_A['ids'][0:s[0], 0:s[1]]
-            # mask = get_text_field_mask(answers_for_B)
-            m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
-            # self.metric_accuracy_generator_B_to_A(y_hat, y, mask)
-            self.metric_accuracy_generator_B_to_A(m)
-
-            # TODO: fix EOS / SOS symbols and cut to real tensor mask
-            y_hat = reconstructed_A["ids"]
-            s = y_hat.size()
-            y = real_A['ids'][0:s[0], 0:s[1]]
-            # mask = get_text_field_mask(reconstructed_A)
-            m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
-            # self.metric_accuracy_cycle_ABA(y_hat, y, mask)
-            self.metric_accuracy_cycle_ABA(m)
-
-            # TODO: fix EOS / SOS symbols and cut to real tensor mask
-            y_hat = reconstructed_B["ids"]
-            s = y_hat.size()
-            y = real_B['ids'][0:s[0], 0:s[1]]
-            # mask = get_text_field_mask(reconstructed_B)
-            m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
-            # self.metric_accuracy_cycle_BAB(y_hat, y, mask)
-            self.metric_accuracy_cycle_BAB(m)
+            self.metric_accuracy_g_A_to_B(fake_B['ids'], answers_for_A["ids"], get_text_field_mask(answers_for_A))
+            self.metric_accuracy_g_B_to_A(fake_A['ids'], answers_for_B["ids"], get_text_field_mask(answers_for_B))
+            self.metric_accuracy_cycle_ABA(reconstructed_A["ids"], real_A['ids'], get_text_field_mask(real_A))
+            self.metric_accuracy_cycle_BAB(reconstructed_B["ids"], real_B['ids'], get_text_field_mask(real_B))
 
         if "loss" in self._g_metrics_to_print:
             self.metric_loss_cycle_ABA(loss_cycle_ABA.item())
             self.metric_loss_cycle_BAB(loss_cycle_BAB.item())
+            self.metric_loss_g_A_to_B(loss_g_A_to_B)
+            self.metric_loss_g_B_to_A(loss_g_B_to_A)
 
-            self.metric_loss_generator_A_to_B(loss_g_A_to_B.item())
-            self.metric_loss_generator_B_to_A(loss_g_B_to_A.item())
-
-        self.metric_loss_discriminator_A_real(loss_d_A_real.item())
-        self.metric_loss_discriminator_A_fake(loss_d_A_fake.item())
-        self.metric_loss_discriminator_B_real(loss_d_B_real.item())
-        self.metric_loss_discriminator_B_fake(loss_d_B_fake.item())
+        self.metric_loss_d_A_real(loss_d_A_real.item())
+        self.metric_loss_d_A_fake(loss_d_A_fake.item())
+        self.metric_loss_d_B_real(loss_d_B_real.item())
+        self.metric_loss_d_B_fake(loss_d_B_fake.item())
 
         return {"loss": total_loss}
 
@@ -266,22 +228,21 @@ class MtGan(Model):
             metrics_dict.update({
                 "l_cycle_ABA": self.metric_loss_cycle_ABA.get_metric(reset),
                 "l_cycle_BAB": self.metric_loss_cycle_BAB.get_metric(reset),
-                "l_g_A2B": self.metric_loss_generator_A_to_B.get_metric(reset),
-                "l_g_B2A": self.metric_loss_generator_B_to_A.get_metric(reset)})
+                "l_g_A2B": self.metric_loss_g_A_to_B.get_metric(reset),
+                "l_g_B2A": self.metric_loss_g_B_to_A.get_metric(reset)})
 
         metrics_dict.update({
-            "l_d_A_real": self.metric_loss_discriminator_A_real.get_metric(reset),
-            "l_d_A_fake": self.metric_loss_discriminator_A_fake.get_metric(reset),
-            "l_d_B_real": self.metric_loss_discriminator_B_real.get_metric(reset),
-            "l_d_B_fake": self.metric_loss_discriminator_B_fake.get_metric(reset)})
+            "l_d_A_real": self.metric_loss_d_A_real.get_metric(reset),
+            "l_d_A_fake": self.metric_loss_d_A_fake.get_metric(reset),
+            "l_d_B_real": self.metric_loss_d_B_real.get_metric(reset),
+            "l_d_B_fake": self.metric_loss_d_B_fake.get_metric(reset)})
 
         if "accuracy" in self._g_metrics_to_print:
             metrics_dict.update({
                 "acc_cycle_ABA": self.metric_accuracy_cycle_ABA.get_metric(reset),
                 "acc_cycle_BAB": self.metric_accuracy_cycle_BAB.get_metric(reset),
-                "acc_g_A2B": self.metric_accuracy_generator_A_to_B.get_metric(reset),
-                "acc_g_B2A": self.metric_accuracy_generator_B_to_A.get_metric(reset)})
-
+                "acc_g_A2B": self.metric_accuracy_g_A_to_B.get_metric(reset),
+                "acc_g_B2A": self.metric_accuracy_g_B_to_A.get_metric(reset)})
         return metrics_dict
 
     @overrides
@@ -347,6 +308,8 @@ class MtGan(Model):
     @classmethod
     def from_params(cls, vocab: Vocabulary, params: Params) -> 'MtGan':  # type: ignore
         # pylint: disable=arguments-differ
+        g_metrics_to_print = params.pop("g_metrics_to_print", "loss")
+
         vocab_namespace_A = params.pop("vocab_namespace_A", "vocab_A")
         vocab_namespace_B = params.pop("vocab_namespace_B", "vocab_B")
 
@@ -412,4 +375,61 @@ class MtGan(Model):
                    discriminator_A=discriminator_A,
                    discriminator_B=discriminator_B,
                    vocab_namespace_A=vocab_namespace_A,
-                   vocab_namespace_B=vocab_namespace_B)
+                   vocab_namespace_B=vocab_namespace_B,
+                   g_metrics_to_print=g_metrics_to_print)
+
+
+class PerElementAccuracy(metrics.Metric):
+    """ As opposite to :class:`BooleanAccuracy` computes total number of matched elements, not sequences"""
+
+    def __init__(self) -> None:
+        self._correct_count = 0.
+        self._total_count = 0.
+
+    def __call__(self,
+                 predictions: torch.Tensor,
+                 gold_labels: torch.Tensor,
+                 mask: Optional[torch.Tensor] = None):
+        """
+        Parameters
+        ----------
+        predictions : ``torch.Tensor``, required.
+            A tensor of predictions of shape (batch_size, ...).
+        gold_labels : ``torch.Tensor``, required.
+            A tensor of the same shape as ``predictions``.
+        mask: ``torch.Tensor``, optional (default = None).
+            A tensor of the same shape as ``predictions``.
+        """
+        predictions, gold_labels, mask = self.unwrap_to_tensors(predictions, gold_labels, mask)
+
+        if mask is not None:
+            # We can multiply by the mask up front, because we're just checking equality below, and
+            # this way everything that's masked will be equal.
+            predictions = predictions * mask
+            gold_labels = gold_labels * mask
+
+        batch_size = predictions.size(0)
+        predictions = predictions.view(batch_size, -1)
+        gold_labels = gold_labels.view(batch_size, -1)
+
+        # The .prod() here is functioning as a logical and.
+        correct = predictions.eq(gold_labels).sum(dim=1).float()
+        count = torch.ones(gold_labels.size())
+        self._correct_count += correct.sum()
+        self._total_count += count.sum()
+
+    def get_metric(self, reset: bool = False):
+        """
+        Returns
+        -------
+        The accumulated accuracy.
+        """
+        accuracy = float(self._correct_count) / float(self._total_count)
+        if reset:
+            self.reset()
+        return accuracy
+
+    @overrides
+    def reset(self):
+        self._correct_count = 0.0
+        self._total_count = 0.0

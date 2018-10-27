@@ -33,30 +33,20 @@ class CrossEntropyReconstructionLoss(_ReconstructionLoss):
         and corresponding masks of size (batch_size, num_decoding_steps+1) steps and computes cross
         entropy loss while taking the mask into account.
 
-        The length of ``targets`` is expected to be greater than that of ``logits`` because the
-        decoder does not need to compute the output corresponding to the last timestep of
-        ``targets``. This method aligns the inputs appropriately to compute the loss.
-
-        During training, we want the logit corresponding to timestep i to be similar to the target
-        token from timestep i + 1. That is, the targets should be shifted by one timestep for
-        appropriate comparison.  Consider a single example where the target has 3 words, and
-        padding is to 7 tokens.
-           The complete sequence would correspond to <S> w1  w2  w3  <E> <P> <P>
-           and the mask would be                     1   1   1   1   1   0   0
+           The complete sequence would correspond to w1  w2  w3  <E> <P> <P>
+           and the mask would be                     1   1   1   1   0   0
            and let the logits be                     l1  l2  l3  l4  l5  l6
         We actually need to compare:
            the sequence           w1  w2  w3  <E> <P> <P>
            with masks             1   1   1   1   0   0
            against                l1  l2  l3  l4  l5  l6
-           (where the input was)  <S> w1  w2  w3  <E> <P>
+           (where the input was)  w1  w2  w3  <E> <P> <P>
         """
-        batch_original_mask = get_text_field_mask(original)
+        # shape: (batch_size, num_decoding_steps)
+        relevant_mask = get_text_field_mask(original)
 
         # shape: (batch_size, num_decoding_steps)
-        relevant_targets = original["ids"][:, 1:].contiguous()
-
-        # shape: (batch_size, num_decoding_steps)
-        relevant_mask = batch_original_mask[:, 1:].contiguous()
+        relevant_targets = original["ids"]
 
         return self._negative_log_likelihood_with_probs(probs=reconstructed["onehots"],
                                                         targets=relevant_targets,
