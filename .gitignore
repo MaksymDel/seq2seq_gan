@@ -1,3 +1,6 @@
 __pycache__/
 .idea/
 .ipynb_checkpoints/
+experiments
+allennlp
+misc
