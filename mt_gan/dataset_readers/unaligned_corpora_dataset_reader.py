@@ -5,7 +5,7 @@ from overrides import overrides
 
 from allennlp.common.checks import ConfigurationError
 from allennlp.common.file_utils import cached_path
-from allennlp.common.util import START_SYMBOL, END_SYMBOL
+from allennlp.common.util import END_SYMBOL
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.fields import TextField, MetadataField
 from allennlp.data.instance import Instance
@@ -29,7 +29,7 @@ class UnilignedCorporaDatasetReader(DatasetReader):
         source_tokens: ``TextField`` and
         target_tokens: ``TextField``
 
-    `START_SYMBOL` and `END_SYMBOL` tokens are added to the source and target sequences.
+    `END_SYMBOL` token is added to the source and target sequences.
 
     Parameters
     ----------
@@ -118,7 +118,6 @@ class UnilignedCorporaDatasetReader(DatasetReader):
     @staticmethod
     def string_to_field(string, token_indexers, tokenizer):
         tokenized_string = tokenizer.tokenize(string)
-        tokenized_string.insert(0, Token(START_SYMBOL))
         tokenized_string.append(Token(END_SYMBOL))
         field = TextField(tokenized_string, token_indexers)
         return field

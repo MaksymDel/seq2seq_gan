@@ -374,6 +374,7 @@ class MtGan(Model):
                                        target_embedding=embedding_B_generator,
                                        encoder=generator_A_to_B_encoder,
                                        max_decoding_steps=generators_max_decoding_steps,
+                                       source_namespace=vocab_namespace_A,
                                        target_namespace=vocab_namespace_B,
                                        attention=attention_generator_A_to_B)
 
@@ -382,6 +383,7 @@ class MtGan(Model):
                                        target_embedding=embedding_A_generator,
                                        encoder=generator_B_to_A_encoder,
                                        max_decoding_steps=generators_max_decoding_steps,
+                                       source_namespace=vocab_namespace_B,
                                        target_namespace=vocab_namespace_A,
                                        attention=attention_generator_B_to_A)
         else:

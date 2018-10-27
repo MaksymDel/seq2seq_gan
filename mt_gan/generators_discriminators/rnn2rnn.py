@@ -111,6 +111,7 @@ class Rnn2Rnn(Model):
                  source_embedding: Embedding,
                  target_embedding: Embedding,
                  encoder: Seq2SeqEncoder,
+                 source_namespace: str,
                  target_namespace: str,
                  max_decoding_steps: int,
                  attention: Attention = None,
@@ -118,13 +119,14 @@ class Rnn2Rnn(Model):
                  beam_size: int = None,
                  scheduled_sampling_ratio: float = 0.) -> None:
         super().__init__(vocab)
+        self._source_namespace = source_namespace
         self._target_namespace = target_namespace
         self._scheduled_sampling_ratio = scheduled_sampling_ratio
 
-        # We need the start symbol to provide as the input at the first timestep of decoding, and
-        # end symbol as a way to indicate the end of the decoded sequence.
-        self._start_index = self.vocab.get_token_index(START_SYMBOL, self._target_namespace)
-        self._end_index = self.vocab.get_token_index(END_SYMBOL, self._target_namespace)
+        # We need the end symbol of source to provide as the input at the first timestep of target decoding, and
+        # end symbol of target as a way to indicate the end of the decoded sequence.
+        self._end_index_source = self.vocab.get_token_index(END_SYMBOL, self._source_namespace)
+        self._end_index_target = self.vocab.get_token_index(END_SYMBOL, self._target_namespace)
 
         # Dense embedding of source vocab tokens.
         self._source_embedding = source_embedding
@@ -177,7 +179,7 @@ class Rnn2Rnn(Model):
         # If the beam_size parameter is not given, we'll just use a greedy search (equivalent to beam_size = 1).
         self._max_decoding_steps = max_decoding_steps
         if beam_size is not None:
-            self._beam_search = BeamSearch(self._end_index, max_steps=max_decoding_steps, beam_size=beam_size)
+            self._beam_search = BeamSearch(self._end_index_target, max_steps=max_decoding_steps, beam_size=beam_size)
         else:
             self._beam_search = None
 
@@ -240,8 +242,8 @@ class Rnn2Rnn(Model):
                 indices = indices[0]
             indices = list(indices)
             # Collect indices till the first end_symbol
-            if self._end_index in indices:
-                indices = indices[:indices.index(self._end_index)]
+            if self._end_index_target in indices:
+                indices = indices[:indices.index(self._end_index_target)]
             predicted_tokens = [self.vocab.get_token_from_index(x, namespace=self._target_namespace)
                                 for x in indices]
             all_predicted_tokens.append(predicted_tokens)
@@ -308,7 +310,7 @@ class Rnn2Rnn(Model):
 
         # Initialize target predictions with the start index.
         # shape: (batch_size,)
-        last_predictions = source_mask.new_full((batch_size,), fill_value=self._start_index)
+        last_predictions = source_mask.new_full((batch_size,), fill_value=self._end_index_source)
 
         step_logits: List[torch.Tensor] = []
         step_probabilities: List[torch.Tensor] = []
@@ -367,7 +369,7 @@ class Rnn2Rnn(Model):
     def _forward_beam_search(self, state: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """Make forward pass during prediction using a beam search."""
         batch_size = state["source_mask"].size()[0]
-        start_predictions = state["source_mask"].new_full((batch_size,), fill_value=self._start_index)
+        start_predictions = state["source_mask"].new_full((batch_size,), fill_value=self._end_index_source)
 
         # shape (all_top_k_predictions): (batch_size, beam_size, num_decoding_steps)
         # shape (log_probabilities): (batch_size, beam_size)
