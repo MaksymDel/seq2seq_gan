@@ -4,3 +4,5 @@ __pycache__/
 experiments
 allennlp
 misc
+data
+toy_data

@@ -20,7 +20,7 @@ from allennlp.data import Vocabulary
 
 
 #Model.register("rnn2rnn")
-class Rnn2Rnn(Model):
+class Rnn2RnnGenerator(Model):
     """
     This ``Rnn2Rnn`` class is a :class:`Model` which takes a sequence, encodes it, and then
     uses the encoded representations to decode another sequence.  You can use this as the basis for

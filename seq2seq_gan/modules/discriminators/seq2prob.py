@@ -13,7 +13,7 @@ from allennlp.data import Vocabulary
 
 
 #Model.register("seq2prob")
-class Seq2Prob(Model):
+class Seq2ProbDiscriminator(Model):
     """
     Predicts the probability of batch being real
 
