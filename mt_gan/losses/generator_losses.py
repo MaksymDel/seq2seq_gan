@@ -7,7 +7,7 @@ from torch.nn.modules.loss import _Loss
 
 class _GeneratorLoss(_Loss):
     @overrides
-    def forward(self, probs_fake_batch_being_real: Dict[str, torch.FloatTensor]) -> float:
+    def forward(self, probs_fake_being_real: Dict[str, torch.FloatTensor]) -> float:
         """
         Takes a fake batch of probabilities of examples being real and returns a single loss value to minimize
         """
@@ -16,9 +16,9 @@ class _GeneratorLoss(_Loss):
 
 class InvertedProbabilityGeneratorLoss(_GeneratorLoss):
     @overrides
-    def forward(self, probs_fake_batch_being_real: Dict[str, torch.FloatTensor]) -> float:
+    def forward(self, probs_fake_being_real: Dict[str, torch.FloatTensor]) -> float:
         # we always want to maximize probability of input fake batch being real, so we invert the probs
-        examples_losses = 1 - probs_fake_batch_being_real
+        examples_losses = 1 - probs_fake_being_real
 
         if self.reduction == "elementwise_mean":  # default
             loss = torch.mean(examples_losses)
@@ -32,9 +32,9 @@ class InvertedProbabilityGeneratorLoss(_GeneratorLoss):
 
 class MinusProbabilityGeneratorLoss(_GeneratorLoss):
     @overrides
-    def forward(self, probs_fake_batch_being_real: Dict[str, torch.FloatTensor]) -> float:
+    def forward(self, probs_fake_being_real: Dict[str, torch.FloatTensor]) -> float:
         # we always want to maximize probability of input fake batch being real, so we take a probs with minus sign
-        examples_losses = -probs_fake_batch_being_real
+        examples_losses = -probs_fake_being_real
 
         if self.reduction == "elementwise_mean":  # default
             loss = torch.mean(examples_losses)

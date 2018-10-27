@@ -11,6 +11,7 @@ from torch.nn import Sigmoid
 from torch.nn.modules import Linear
 from allennlp.data import Vocabulary
 
+
 #Model.register("seq2prob")
 class Seq2Prob(Model):
     """
@@ -44,8 +45,7 @@ class Seq2Prob(Model):
         self._projection_layer = Linear(encoder.get_output_dim(), 1)
 
     @overrides
-    def forward(self,  # type: ignore
-                batch: Dict[str, torch.LongTensor]) -> torch.Tensor:
+    def forward(self, tokens: Dict[str, torch.LongTensor]) -> torch.Tensor:
         # pylint: disable=arguments-differ
         """
         Make foward pass with decoder logic for producing the entire target sequence.
@@ -61,12 +61,12 @@ class Seq2Prob(Model):
         torch.Tensor
         """
         # shape: (batch_size, max_input_sequence_length, embedding_dim)
-        embedded_input = torch.matmul(batch["onehots"].float(), self._embedding.weight)
+        embedded_input = torch.matmul(tokens["onehots"].float(), self._embedding.weight)
 
         batch_size, _, _ = embedded_input.size()
 
         # shape: (batch_size, max_input_sequence_length)
-        source_mask = util.get_text_field_mask(batch)
+        source_mask = util.get_text_field_mask(tokens)
 
         # shape: (batch_size, encoder_output_dim)
         encoder_output = self._encoder(embedded_input, source_mask)

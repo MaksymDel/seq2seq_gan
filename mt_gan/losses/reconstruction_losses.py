@@ -11,8 +11,8 @@ from allennlp.nn.util import get_text_field_mask
 class _ReconstructionLoss(_Loss):
     @overrides
     def forward(self,
-                batch_original: Dict[str, torch.FloatTensor],
-                batch_reconstructed: Dict[str, torch.FloatTensor]) -> float:
+                original: Dict[str, torch.FloatTensor],
+                reconstructed: Dict[str, torch.FloatTensor]) -> float:
         """
         Takes an original batch of examples and reconstructed batch, and returns a single loss value to minimize
         """
@@ -23,8 +23,8 @@ class _ReconstructionLoss(_Loss):
 class CrossEntropyReconstructionLoss(_ReconstructionLoss):
 
     def forward(self,
-                batch_reconstructed: Dict[str, torch.FloatTensor],
-                batch_original: Dict[str, torch.FloatTensor]) -> float:
+                reconstructed: Dict[str, torch.FloatTensor],
+                original: Dict[str, torch.FloatTensor]) -> float:
         """
         Compute loss.
 
@@ -50,15 +50,15 @@ class CrossEntropyReconstructionLoss(_ReconstructionLoss):
            against                l1  l2  l3  l4  l5  l6
            (where the input was)  <S> w1  w2  w3  <E> <P>
         """
-        batch_original_mask = get_text_field_mask(batch_original)
+        batch_original_mask = get_text_field_mask(original)
 
         # shape: (batch_size, num_decoding_steps)
-        relevant_targets = batch_original["ids"][:, 1:].contiguous()
+        relevant_targets = original["ids"][:, 1:].contiguous()
 
         # shape: (batch_size, num_decoding_steps)
         relevant_mask = batch_original_mask[:, 1:].contiguous()
 
-        return self._negative_log_likelihood_with_probs(probs=batch_reconstructed["onehots"],
+        return self._negative_log_likelihood_with_probs(probs=reconstructed["onehots"],
                                                         targets=relevant_targets,
                                                         weights=relevant_mask)
 

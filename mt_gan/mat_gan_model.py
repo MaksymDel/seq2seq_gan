@@ -1,27 +1,21 @@
-import numpy
-from overrides import overrides
-import torch
-
-from allennlp.data.vocabulary import Vocabulary
-from allennlp.modules import Attention, Seq2SeqEncoder, Seq2VecEncoder
-from allennlp.models.model import Model
-from allennlp.modules.token_embedders import Embedding
-from allennlp.nn.util import get_text_field_mask
-from allennlp.data import Token
-from mt_gan.generators_discriminators import Seq2Prob, Rnn2Rnn
-
-import typing
-from typing import TypeVar, Dict
-import inspect
 import logging
+from typing import Dict
 
+import numpy
+import torch
 from allennlp.common.checks import ConfigurationError
 from allennlp.common.params import Params
+from allennlp.data.vocabulary import Vocabulary
+from allennlp.models.model import Model
+from allennlp.modules import Attention, Seq2SeqEncoder, Seq2VecEncoder
+from allennlp.modules.token_embedders import Embedding
 from allennlp.training import metrics
 
+from mt_gan.generators_discriminators import Seq2Prob, Rnn2Rnn
 from mt_gan.losses import *
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
 
 @Model.register("mt_gan")
 class MtGan(Model):
@@ -128,10 +122,10 @@ class MtGan(Model):
 
     @overrides
     def forward(self,  # type: ignore
-                batch_real_A: Dict[str, torch.LongTensor] = None,
-                batch_real_B: Dict[str, torch.LongTensor] = None,
-                batch_answers_for_A: Dict[str, torch.LongTensor] = None,
-                batch_answers_for_B: Dict[str, torch.LongTensor] = None) -> Dict[str, torch.Tensor]:
+                real_A: Dict[str, torch.LongTensor] = None,
+                real_B: Dict[str, torch.LongTensor] = None,
+                answers_for_A: Dict[str, torch.LongTensor] = None,
+                answers_for_B: Dict[str, torch.LongTensor] = None) -> Dict[str, torch.Tensor]:
         # pylint: disable=arguments-differ
         """
         Make foward pass with decoder logic for producing the entire target sequence.
@@ -143,10 +137,10 @@ class MtGan(Model):
 
         Parameters
         ----------
-        batch_real_A : ``Dict[str, torch.LongTensor]``
+        real_A : ``Dict[str, torch.LongTensor]``
            The output of `TextField.as_array()` applied on the source `TextField`. This will be
            passed through a `TextFieldEmbedder` and then through an encoder.
-        batch_real_B : ``Dict[str, torch.LongTensor]``, optional (default = None)
+        real_B : ``Dict[str, torch.LongTensor]``, optional (default = None)
            Output of `Textfield.as_array()` applied on target `TextField`. We assume that the
            target tokens are also represented as a `TextField`.
 
@@ -154,36 +148,32 @@ class MtGan(Model):
         -------
         Dict[str, torch.Tensor]
         """
-        if batch_real_A is None or batch_real_B is None:  # Test time!
+        if real_A is None or real_B is None:  # Test time!
             raise ValueError("Testing is not implemented yet")
 
         # get a couple of real batches of un-parallel data
-        batch_real_A["onehots"] = self._ids_to_onehot(batch_real_A["ids"], self._num_classes_A)
-        batch_real_B["onehots"] = self._ids_to_onehot(batch_real_B["ids"], self._num_classes_B)
-
-        # translate real batches
-        batch_fake_A = self._generator_B_to_A(batch_real_B)
-        batch_fake_B = self._generator_A_to_B(batch_real_A)
+        real_A["onehots"] = self._ids_to_onehot(real_A["ids"], self._num_classes_A)
+        real_B["onehots"] = self._ids_to_onehot(real_B["ids"], self._num_classes_B)
 
         # LOSSES FOR GENERATORS: freeze discriminators first!
         self._set_requires_grad([self._discriminator_A, self._discriminator_B], False)
 
         # Loss generator A -> B
-        loss_g_A_to_B = self._forward_generator(batch_fake_B, self._discriminator_B)
+        loss_g_A_to_B, fake_B = self._forward_generator(real_A, self._generator_A_to_B, self._discriminator_B)
         # Loss generator B -> A
-        loss_g_B_to_A = self._forward_generator(batch_fake_A, self._discriminator_A)
+        loss_g_B_to_A, fake_A = self._forward_generator(real_B, self._generator_B_to_A, self._discriminator_A)
         # Cycle loss A -> B -> A
-        loss_cycle_ABA, batch_reconstructed_A = self._forward_cycle(batch_real_A, batch_fake_B, self._generator_B_to_A)
+        loss_cycle_ABA, reconstructed_A = self._forward_cycle(real_A, fake_B, self._generator_B_to_A)
         # Cycle loss B -> A -> B
-        loss_cycle_BAB, batch_reconstructed_B = self._forward_cycle(batch_real_B, batch_fake_A, self._generator_A_to_B)
+        loss_cycle_BAB, reconstructed_B = self._forward_cycle(real_B, fake_A, self._generator_A_to_B)
 
         # LOSSES FOR DISCRIMINATORS: unfreeze them now!
         self._set_requires_grad([self._discriminator_A, self._discriminator_B], True)
 
         # Fake and real losses for Discriminator A
-        loss_d_A_real, loss_d_A_fake = self._forward_discriminator(batch_real_A, batch_fake_A, self._discriminator_A)
+        loss_d_A_real, loss_d_A_fake = self._forward_discriminator(real_A, fake_A, self._discriminator_A)
         # Fake and real losses for Discriminator B
-        loss_d_B_real, loss_d_B_fake = self._forward_discriminator(batch_real_B, batch_fake_B, self._discriminator_B)
+        loss_d_B_real, loss_d_B_fake = self._forward_discriminator(real_B, fake_B, self._discriminator_B)
 
         # Compute total loss to return and minimize
         total_loss = loss_g_A_to_B + loss_g_B_to_A + \
@@ -195,38 +185,38 @@ class MtGan(Model):
 
         # Compute metrics
         if "accuracy" in self._g_metrics_to_print:
-            y = batch_answers_for_A["ids"]
+            y = answers_for_A["ids"]
             s = y.size()
-            y_hat = batch_fake_B['ids'][0:s[0], 0:s[1]]
-            mask = get_text_field_mask(batch_answers_for_A)
+            y_hat = fake_B['ids'][0:s[0], 0:s[1]]
+            mask = get_text_field_mask(answers_for_A)
             m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
             # self.metric_accuracy_generator_A_to_B(y_hat, y, mask)
             self.metric_accuracy_generator_A_to_B(m)
 
-            y = batch_answers_for_B["ids"]
+            y = answers_for_B["ids"]
             s = y.size()
-            y_hat = batch_fake_A['ids'][0:s[0], 0:s[1]]
-            # mask = get_text_field_mask(batch_answers_for_B)
+            y_hat = fake_A['ids'][0:s[0], 0:s[1]]
+            # mask = get_text_field_mask(answers_for_B)
             m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
-            #self.metric_accuracy_generator_B_to_A(y_hat, y, mask)
+            # self.metric_accuracy_generator_B_to_A(y_hat, y, mask)
             self.metric_accuracy_generator_B_to_A(m)
 
             # TODO: fix EOS / SOS symbols and cut to real tensor mask
-            y_hat = batch_reconstructed_A["ids"]
+            y_hat = reconstructed_A["ids"]
             s = y_hat.size()
-            y = batch_real_A['ids'][0:s[0], 0:s[1]]
-            mask = get_text_field_mask(batch_reconstructed_A)
+            y = real_A['ids'][0:s[0], 0:s[1]]
+            # mask = get_text_field_mask(reconstructed_A)
             m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
-            #self.metric_accuracy_cycle_ABA(y_hat, y, mask)
+            # self.metric_accuracy_cycle_ABA(y_hat, y, mask)
             self.metric_accuracy_cycle_ABA(m)
 
             # TODO: fix EOS / SOS symbols and cut to real tensor mask
-            y_hat = batch_reconstructed_B["ids"]
+            y_hat = reconstructed_B["ids"]
             s = y_hat.size()
-            y = batch_real_B['ids'][0:s[0], 0:s[1]]
-            # mask = get_text_field_mask(batch_reconstructed_B)
+            y = real_B['ids'][0:s[0], 0:s[1]]
+            # mask = get_text_field_mask(reconstructed_B)
             m = torch.mean((y_hat == y).float())  # TODO: figure out why BooleanAccuracy does not work
-            #self.metric_accuracy_cycle_BAB(y_hat, y, mask)
+            # self.metric_accuracy_cycle_BAB(y_hat, y, mask)
             self.metric_accuracy_cycle_BAB(m)
 
         if "loss" in self._g_metrics_to_print:
@@ -243,29 +233,29 @@ class MtGan(Model):
 
         return {"loss": total_loss}
 
-    def _forward_cycle(self, batch_real, batch_fake, generator_fake_to_real):
-        batch_reconstructed = generator_fake_to_real(source_batch=batch_fake, target_batch=batch_real)
-        loss_cycle = self._loss_calculator_cycle(batch_reconstructed=batch_reconstructed,
-                                                 batch_original=batch_real)
+    def _forward_cycle(self, real, fake, generator_fake_to_real):
+        reconstructed = generator_fake_to_real(source_tokens=fake, target_tokens=real)
+        loss_cycle = self._loss_calculator_cycle(reconstructed=reconstructed,
+                                                 original=real)
+        return loss_cycle, reconstructed
 
-        return loss_cycle, batch_reconstructed
+    def _forward_generator(self, real, generator_real_to_fake, discriminator_target):
+        fake = generator_real_to_fake(real)
+        probs_fake = discriminator_target(tokens=fake)
+        loss_generator = self._loss_calculator_generator(probs_fake_being_real=probs_fake)
 
-    def _forward_generator(self, batch_fake_target, discriminator_target):
-        probs_batch_fake = discriminator_target(batch=batch_fake_target)
-        loss_generator = self._loss_calculator_generator(probs_fake_batch_being_real=probs_batch_fake)
+        return loss_generator, fake
 
-        return loss_generator
-
-    def _forward_discriminator(self, batch_real, batch_fake, discriminator):
-        probs_batch_real = discriminator(batch=batch_real)
-        loss_real = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_real,
-                                                        batch_is_real=True)
+    def _forward_discriminator(self, real, fake, discriminator):
+        probs_real = discriminator(tokens=real)
+        loss_real = self._loss_calculator_discriminator(probs_being_real=probs_real,
+                                                        is_real=True)
 
         # detach from generator
-        batch_fake_detached = self._detach_batch(batch_fake)  # TODO: implement experience reply
-        probs_batch_fake = discriminator(batch=batch_fake_detached)
-        loss_fake = self._loss_calculator_discriminator(probs_batch_being_real=probs_batch_fake,
-                                                        batch_is_real=False)
+        fake_detached = self._detach_batch(fake)  # TODO: implement experience reply
+        probs_fake = discriminator(tokens=fake_detached)
+        loss_fake = self._loss_calculator_discriminator(probs_being_real=probs_fake,
+                                                        is_real=False)
 
         return loss_real, loss_fake
 
@@ -407,8 +397,10 @@ class MtGan(Model):
             embedding_A_discriminator = Embedding(num_classes_A, discriminators_embedding_dim)
             embedding_B_discriminator = Embedding(num_classes_B, discriminators_embedding_dim)
 
-            discriminator_A = Seq2Prob(vocab=vocab, encoder=discriminator_A_encoder, embedding=embedding_A_discriminator)
-            discriminator_B = Seq2Prob(vocab=vocab, encoder=discriminator_B_encoder, embedding=embedding_B_discriminator)
+            discriminator_A = Seq2Prob(vocab=vocab, encoder=discriminator_A_encoder,
+                                       embedding=embedding_A_discriminator)
+            discriminator_B = Seq2Prob(vocab=vocab, encoder=discriminator_B_encoder,
+                                       embedding=embedding_B_discriminator)
         else:
             raise ConfigurationError(message="This discriminators model type is not supported")
 

@@ -94,10 +94,10 @@ class UnilignedCorporaDatasetReader(DatasetReader):
         if string_A is None and string_B is None:
             raise ValueError("You should provide a batch at least in one domain")
 
-        field_name_A = "batch_real_A"
-        field_name_B = "batch_real_B"
-        filed_name_answers_for_A = "batch_answers_for_A"
-        filed_name_answers_for_B = "batch_answers_for_B"
+        field_name_A = "real_A"
+        field_name_B = "real_B"
+        filed_name_answers_for_A = "answers_for_A"
+        filed_name_answers_for_B = "answers_for_B"
 
         fields_dict = {}
         if string_A is not None:  # test time

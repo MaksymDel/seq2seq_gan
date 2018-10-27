@@ -18,6 +18,7 @@ from allennlp.nn import util
 from allennlp.nn.beam_search import BeamSearch
 from allennlp.data import Vocabulary
 
+
 #Model.register("rnn2rnn")
 class Rnn2Rnn(Model):
     """
@@ -184,31 +185,31 @@ class Rnn2Rnn(Model):
 
     @overrides
     def forward(self,  # type: ignore
-                source_batch: Dict[str, torch.LongTensor],
-                target_batch: Dict[str, torch.LongTensor] = None) -> Dict[str, torch.Tensor]:
+                source_tokens: Dict[str, torch.LongTensor],
+                target_tokens: Dict[str, torch.LongTensor] = None) -> Dict[str, torch.Tensor]:
         # pylint: disable=arguments-differ
         """
         Make foward pass with decoder logic for producing the entire target sequence.
 
         Parameters
         ----------
-        source_batch : ``Dict[str, torch.LongTensor]``
+        source_tokens : ``Dict[str, torch.LongTensor]``
            The output of `TextField.as_array()` applied on the source `TextField`. This will be
            passed through a `TextFieldEmbedder` and then through an encoder.
-        target_batch : ``Dict[str, torch.LongTensor]``, optional (default = None)
+        target_tokens : ``Dict[str, torch.LongTensor]``, optional (default = None)
            Output of `Textfield.as_array()` applied on target `TextField`. We assume that the
            target tokens are also represented as a `TextField`.
         Returns
         -------
         Dict[str, torch.Tensor]
         """
-        state = self._init_encoded_state(source_batch)
+        state = self._init_encoded_state(source_tokens)
 
-        if target_batch or not self._beam_search:
+        if target_tokens or not self._beam_search:
             # The _forward_loop decodes the input sequence and computes the loss during training
             # and validation. During prediction, it does a greedy decode, which we only want to use
             # if beam search is disabled.
-            res = self._forward_loop(state, target_tokens=target_batch)
+            res = self._forward_loop(state, target_tokens=target_tokens)
 
             return res
         # TODO: Run beam search whenever self.training is False so that we can get
