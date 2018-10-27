@@ -72,9 +72,10 @@ class MtGan(Model):
                  generator_B_to_A: RnnDecoderGenerator,
                  discriminator_A: BasicDiscriminator,
                  discriminator_B: BasicDiscriminator,
-                 vocab_namespace_A: str,
-                 vocab_namespace_B: str,
-                 g_metrics_to_print: str) -> None:
+                 vocab_namespace_A: str = "vocab_B",
+                 vocab_namespace_B: str = "vocab_A",
+                 cycle_loss_weight: float = 1.0,
+                 g_metrics_to_print: str = "loss") -> None:
         super(MtGan, self).__init__(vocab)
 
         # define players of min-max game
@@ -89,6 +90,7 @@ class MtGan(Model):
         self._num_classes_B = vocab.get_vocab_size(namespace=vocab_namespace_B)
 
         # define loss calculators
+        self._cycle_loss_weight = cycle_loss_weight
         self._loss_calculator_cycle = CrossEntropyReconstructionLoss()
         self._loss_calculator_generator = InvertedProbabilityGeneratorLoss()
         self._loss_calculator_discriminator = ClassicDiscriminatorLoss()
@@ -169,10 +171,11 @@ class MtGan(Model):
         loss_d_B_real, loss_d_B_fake = self._forward_discriminator(real_B, fake_B, self._discriminator_B)
 
         # Compute total loss to return and minimize
-        total_loss = loss_g_A_to_B + loss_g_B_to_A + \
-                     loss_cycle_ABA + loss_cycle_BAB + \
-                     loss_d_A_real + loss_d_A_fake + \
-                     loss_d_B_real + loss_d_B_fake
+        loss_cycle_ABA = self._cycle_loss_weight * loss_cycle_ABA
+        loss_cycle_BAB = self._cycle_loss_weight * loss_cycle_BAB
+
+        total_loss = loss_g_A_to_B + loss_g_B_to_A + loss_cycle_ABA + loss_cycle_BAB + \
+                     loss_d_A_real + loss_d_A_fake + loss_d_B_real + loss_d_B_fake
 
         # -------------------------------------------------------------------------------------------------------------
 
@@ -309,6 +312,7 @@ class MtGan(Model):
     @classmethod
     def from_params(cls, vocab: Vocabulary, params: Params) -> 'MtGan':  # type: ignore
         # pylint: disable=arguments-differ
+        cycle_loss_weight = params.pop("cycle_loss_weight", 1.0)
         g_metrics_to_print = params.pop("g_metrics_to_print", "loss")
 
         vocab_namespace_A = params.pop("vocab_namespace_A", "vocab_A")
@@ -377,6 +381,7 @@ class MtGan(Model):
                    discriminator_B=discriminator_B,
                    vocab_namespace_A=vocab_namespace_A,
                    vocab_namespace_B=vocab_namespace_B,
+                   cycle_loss_weight=cycle_loss_weight,
                    g_metrics_to_print=g_metrics_to_print)
 
 

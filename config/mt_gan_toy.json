@@ -8,6 +8,7 @@
 
   "model": {
     "type": "mt_gan",
+    "cycle_loss_weight": 1,
     "g_metrics_to_print": "loss-accuracy",
     // "beam_size": 5,
     // ============= GENERRATORS ARCHITECTURE =============
