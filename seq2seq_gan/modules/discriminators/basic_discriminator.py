@@ -13,7 +13,7 @@ from seq2seq_gan.modules.discriminators.discriminator import Discriminator
 
 
 # Model.register("basic")
-class BasicDiscriminator(Discriminator):
+class OnehotsDiscriminator(Discriminator):
     """
     Predicts the probability of batch being real
 

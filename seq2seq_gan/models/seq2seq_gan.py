@@ -12,14 +12,15 @@ from allennlp.modules.token_embedders import Embedding
 from allennlp.training.metrics import Average
 
 from seq2seq_gan.losses import *
-from seq2seq_gan.metrics import PerElementAccuracy
-from seq2seq_gan.modules import BasicDiscriminator, RnnDecoderGenerator
+from seq2seq_gan.training.metrics import PerElementAccuracy
+from seq2seq_gan.modules import OnehotsDiscriminator, RnnDecoderGenerator
+from seq2seq_gan.models.base_gan_model import BaseGanModel
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 @Model.register("mt_gan")
-class MtGan(Model):
+class CycleGanMt(BaseGanModel):
     """
     This ``SimpleSeq2Seq`` class is a :class:`Model` which takes a sequence, encodes it, and then
     uses the encoded representations to decode another sequence.  You can use this as the basis for
@@ -69,13 +70,13 @@ class MtGan(Model):
                  vocab: Vocabulary,
                  generator_A_to_B: RnnDecoderGenerator,
                  generator_B_to_A: RnnDecoderGenerator,
-                 discriminator_A: BasicDiscriminator,
-                 discriminator_B: BasicDiscriminator,
+                 discriminator_A: OnehotsDiscriminator,
+                 discriminator_B: OnehotsDiscriminator,
                  vocab_namespace_A: str = "vocab_B",
                  vocab_namespace_B: str = "vocab_A",
                  cycle_loss_weight: float = 1.0,
                  g_metrics_to_print: str = "loss") -> None:
-        super(MtGan, self).__init__(vocab)
+        super(CycleGanMt, self).__init__(vocab)
 
         # define players of min-max game
         self._generator_A_to_B = generator_A_to_B
@@ -306,7 +307,7 @@ class MtGan(Model):
         return {"ids": batch["ids"], "onehots": batch["onehots"].detach()}
 
     @classmethod
-    def from_params(cls, vocab: Vocabulary, params: Params) -> 'MtGan':  # type: ignore
+    def from_params(cls, vocab: Vocabulary, params: Params) -> 'CycleGanMt':  # type: ignore
         # pylint: disable=arguments-differ
         cycle_loss_weight = params.pop("cycle_loss_weight", 1.0)
         g_metrics_to_print = params.pop("g_metrics_to_print", "loss")
@@ -363,10 +364,10 @@ class MtGan(Model):
             embedding_A_discriminator = Embedding(num_classes_A, discriminators_embedding_dim)
             embedding_B_discriminator = Embedding(num_classes_B, discriminators_embedding_dim)
 
-            discriminator_A = BasicDiscriminator(vocab=vocab, encoder=discriminator_A_encoder,
-                                                 embedding=embedding_A_discriminator)
-            discriminator_B = BasicDiscriminator(vocab=vocab, encoder=discriminator_B_encoder,
-                                                 embedding=embedding_B_discriminator)
+            discriminator_A = OnehotsDiscriminator(vocab=vocab, encoder=discriminator_A_encoder,
+                                                   embedding=embedding_A_discriminator)
+            discriminator_B = OnehotsDiscriminator(vocab=vocab, encoder=discriminator_B_encoder,
+                                                   embedding=embedding_B_discriminator)
         else:
             raise ConfigurationError(message="This discriminators model type is not supported")
 
