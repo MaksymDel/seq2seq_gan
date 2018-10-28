@@ -15,8 +15,6 @@ from overrides import overrides
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-# TODO: process optional answers as a MetadataField
-
 @DatasetReader.register("unaligned_corpora")
 class UnilignedCorporaDatasetReader(DatasetReader):
     """

@@ -65,7 +65,6 @@ class MtGan(Model):
         2015 <https://arxiv.org/abs/1506.03099>`_.
     """
 
-    # TODO: make base classes for G and D and specify them as types there
     def __init__(self,
                  vocab: Vocabulary,
                  generator_A_to_B: RnnDecoderGenerator,
